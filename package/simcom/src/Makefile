@@ -1,0 +1,1 @@
+obj-$(CONFIG_USB_NET_SIMCOM_SIM7600)	+= simcom_wwan.o

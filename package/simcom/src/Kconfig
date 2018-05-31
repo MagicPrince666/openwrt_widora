@@ -1,0 +1,5 @@
+config USB_NET_SIMCOM_SIM7600
+	tristate "simcom 7600ce"
+	depends on USB_USBNET
+	help
+	  SIMCOM 7600CE 4G LTE module
