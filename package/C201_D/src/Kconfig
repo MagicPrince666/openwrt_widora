@@ -1,0 +1,5 @@
+config USB_ARTOSYN_USB_8020
+	tristate "artosyn usb 8020"
+	depends on USB
+	help
+	  artosyn usb 8020 module

@@ -1,0 +1,1 @@
+obj-$(CONFIG_USB_ARTOSYN_USB_8020)	+= artosyn_usb_8020.o
