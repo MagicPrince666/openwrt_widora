@@ -11,7 +11,7 @@ int Serial::openSerial(char *cSerialName)
 
     struct termios opt; 
 
-    iFd = open(cSerialName, O_RDWR | O_NOCTTY |O_NONBLOCK);
+    iFd = open(cSerialName, O_RDWR | O_NOCTTY | O_NONBLOCK);
 	//iFd = open(cSerialName, O_RDWR | O_NOCTTY | O_NDELAY);//阻塞 |O_RSYNC
     if(iFd < 0) {
         perror(cSerialName);
