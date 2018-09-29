@@ -11,7 +11,7 @@ define Package/http_server
 	CATEGORY:=Utilities
 	TITLE:=http server firmware
 	SUBMENU:=XAG
-	DEPENDS:= +libstdcpp +boost-thread +boost-filesystem +boost-system +libpthread +libopenssl +zlib +librt 
+	DEPENDS:= +libstdcpp +boost +boost-thread +boost-filesystem +boost-system +libpthread +libopenssl +zlib +librt 
 endef
 
 define Package/http_server/description
