@@ -51,4 +51,4 @@ define Build/Compile
 	modules
 endef
 
-$(eval $(call KernelPackage,mtk_soopwm))
+$(eval $(call KernelPackage,mtk-soopwm))
