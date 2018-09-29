@@ -10,6 +10,7 @@ define Package/rtsp_server
 	SECTION:=base
 	CATEGORY:=Utilities
 	TITLE:=rtsp server
+	SUBMENU:=XAG
 	DEPENDS:= +librt +libm +libdl +libstdcpp +libpthread
 endef
 
