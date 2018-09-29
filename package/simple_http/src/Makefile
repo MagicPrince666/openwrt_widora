@@ -6,7 +6,7 @@ TARGET2	= https_server
 DIR		= . 
 INC		= -I.
 CFLAGS	= -std=c++11 -O3 -g -Wall -Wextra -Wsign-conversion
-LDFLAGS = -lboost_thread -lboost_filesystem -lboost_system -lssl -lcrypto -lz -lrt
+LDFLAGS = -lboost_thread -lboost_filesystem -lboost_system -lpthread -lssl -lcrypto -lz -lrt
 
 OBJPATH	= .
 
