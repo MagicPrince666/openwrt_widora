@@ -74,3 +74,7 @@ $ make -j4
 # 6.image
 the binary image name like this in bin/ramips/:
 openwrt-ramips-mt7688-Widora-squashfs-sysupgrade.bin
+
+#update 
+git remote add upstream https://github.com/widora/openwrt_widora.git
+git fetch upstream
