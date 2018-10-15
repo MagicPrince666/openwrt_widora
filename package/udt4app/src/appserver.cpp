@@ -12,8 +12,11 @@
 #include <udt.h>
 #include "cc.h"
 #include "test_util.h"
+#include "serial.h"
 
 using namespace std;
+
+Serial serial; 
 
 #ifndef WIN32
 void* recvdata(void*);
@@ -28,6 +31,16 @@ int main(int argc, char* argv[])
       cout << "usage: appserver [server_port]" << endl;
       return 0;
    }
+
+   serial.fd[0] = serial.openSerial("/dev/ttyACM0");
+	
+      if(serial.fd[0] < 0)
+      {
+            printf("can\'t open /dev/ttyACM0 !\n");
+            return 1;
+      }
+
+      tcflush(serial.fd[0],TCIOFLUSH);//清空串口输入输出缓存
 
    // Automatically start up and clean up UDT module.
    UDTUpDown _udt_;
@@ -137,6 +150,23 @@ DWORD WINAPI recvdata(LPVOID usocket)
          }
 
          rsize += rs;
+      }
+
+      int r_cnt,w_cnt;
+      int ret;
+      r_cnt = rsize;
+      if(r_cnt > 0)
+      {
+            w_cnt = 0;
+            do{
+
+                  ret = write(serial.fd[0], &data[w_cnt],r_cnt - w_cnt);	
+                  if(ret > 0)
+                  w_cnt += ret;
+            else
+                  usleep(1000);
+                        
+            }while(w_cnt < size);
       }
 
       if (rsize < size)

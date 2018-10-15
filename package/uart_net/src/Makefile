@@ -1,4 +1,4 @@
-TARGET	= uart_epoll 
+TARGET	= uart_net
 
 DIR		= . 
 INC		= -I. 

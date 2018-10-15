@@ -12,6 +12,10 @@
 #include <udt.h>
 #include "cc.h"
 #include "test_util.h"
+#include <sys/ioctl.h>
+#include "v4l2uvc.h"
+#include "h264_xu_ctrls.h"
+#include "H264_UVC_TestAP.h"
 
 using namespace std;
 
@@ -21,17 +25,37 @@ void* monitor(void*);
 DWORD WINAPI monitor(LPVOID);
 #endif
 
+//#define VIDEO_FILE
+#define VIDEO_DEV
+
+#ifdef VIDEO_FILE
 #define PACKAGE 15360
 FILE* g_txvideo = NULL;
+#endif
+
+#ifdef VIDEO_DEV
+extern struct vdIn *vd;
+extern struct buffer *buffers;
+#endif
+
 
 int main(int argc, char* argv[])
 {
+#ifdef VIDEO_FILE
    if ((4 != argc) || (0 == atoi(argv[2])))
    {
       cout << "usage: appclient server_ip server_port file_name" << endl;
       return 0;
    }
+#endif
 
+#ifdef VIDEO_DEV
+   if ((3 != argc) || (0 == atoi(argv[2])))
+   {
+      cout << "usage: appclient server_ip server_port" << endl;
+      return 0;
+   }
+#endif
    // Automatically start up and clean up UDT module.
    UDTUpDown _udt_;
 
@@ -92,6 +116,7 @@ int main(int argc, char* argv[])
 
    freeaddrinfo(peer);
 
+#ifdef VIDEO_FILE
       g_txvideo = fopen(argv[3], "rb");
 	if(g_txvideo == NULL)
 	{
@@ -103,6 +128,7 @@ int main(int argc, char* argv[])
 
 	printf("Transmit %s !\n",argv[3]);
 
+
    // using CC method
    //CUDPBlast* cchandle = NULL;
    //int temp;
@@ -113,6 +139,7 @@ int main(int argc, char* argv[])
    //int size = 100000;
    int size = PACKAGE;
    char* data = new char[size];
+#endif
 
    #ifndef WIN32
       pthread_create(new pthread_t, NULL, monitor, &client);
@@ -120,6 +147,80 @@ int main(int argc, char* argv[])
       CreateThread(NULL, 0, monitor, &client, 0, NULL);
    #endif
 
+#ifdef VIDEO_DEV
+      int ret;
+	struct v4l2_buffer buf0;
+	Init_264camera();
+
+	struct timeval tv;
+      tv.tv_sec = 0;
+      tv.tv_usec = 10000;
+	fd_set rfds;
+      int retval=0;
+
+      char* data = NULL;
+      int r_cnt,w_cnt;
+	for(;;)
+      {
+            memset (&buf0, 0, sizeof (buf0));
+                        
+            buf0.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            buf0.memory = V4L2_MEMORY_MMAP;
+
+            FD_ZERO(&rfds);
+            FD_SET(vd->fd, &rfds);
+            
+            retval=select(vd->fd + 1, &rfds, NULL, NULL, &tv);
+            if(retval<0)
+            {  
+                  perror("select error\n");  
+            }
+            else//有数据要收
+            {		
+                  ret = ioctl(vd->fd, VIDIOC_DQBUF, &buf0);
+                  if (ret < 0) 
+                  {
+                        printf("Unable to dequeue buffer!\n");
+                        exit(1);
+                  }	  
+                  
+                  r_cnt = buf0.bytesused;
+                  data = (char*)(buffers[buf0.index].start);
+                  if(r_cnt > 0)
+                  {
+                        w_cnt = 0;
+                        do{
+                              if (UDT::ERROR == (ret = UDT::send(client, data + w_cnt, r_cnt - w_cnt, 0)))
+                              {
+                                    cout << "send:" << UDT::getlasterror().getErrorMessage() << endl;
+                                    break;
+                              }
+                              if(ret > 0)
+                              w_cnt += ret;
+                              else
+                              usleep(1000);
+                              
+                        }while(w_cnt < r_cnt);
+
+                        //usleep(33000);
+                  }
+                  // fwrite(buffers[buf.index].start, buf.bytesused, 1, rec_fp1);
+                  
+
+
+                  ret = ioctl(vd->fd, VIDIOC_QBUF, &buf0);
+                  
+                  if (ret < 0) 
+                  {
+                        printf("Unable to requeue buffer");
+                        exit(1);
+                  }
+            }
+      }
+#endif
+
+
+#ifdef VIDEO_FILE
    int r_cnt,w_cnt;
     int ret;
     //char *buf1 = new char[PACKAGE];
@@ -156,7 +257,7 @@ int main(int argc, char* argv[])
             }
     }
 
-
+#endif
 //    for (int i = 0; i < 1000000; i ++)
 //    {
 //       int ssize = 0;
@@ -177,7 +278,7 @@ int main(int argc, char* argv[])
 //    }
 
    UDT::close(client);
-   delete [] data;
+   //delete [] data;
    return 0;
 }
 

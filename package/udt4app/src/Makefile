@@ -8,7 +8,7 @@ ifndef arch
    arch = mips
 endif
 
-CCFLAGS = -Wall -D$(os) -I../src -finline-functions -O3
+CCFLAGS = -Wall -D$(os) -I../src -I./H264_camera -finline-functions -O3
 
 ifeq ($(arch), IA32)
    CCFLAGS += -DIA32 #-mcpu=pentiumpro -march=pentiumpro -mmmx -msse
@@ -26,7 +26,7 @@ ifeq ($(arch), SPARC)
    CCFLAGS += -DSPARC
 endif
 
-LDFLAGS = -ludt -lstdc++ -lpthread -lm
+LDFLAGS = -L../src -ludt -lstdc++ -lpthread -lm
 
 ifeq ($(os), UNIX)
    LDFLAGS += -lsocket
@@ -36,18 +36,22 @@ ifeq ($(os), SUNOS)
    LDFLAGS += -lrt -lsocket
 endif
 
-DIR = $(shell pwd)
+DIR = $(shell pwd) ./H264_camera
 
 APP = appserver appclient sendfile recvfile test
 
-all: $(APP)
+FILES	= $(foreach dir,$(DIR),$(wildcard $(dir)/*.cpp))
 
-%.o: %.cpp
+OBJS	= $(patsubst %.cpp,%.o,$(FILES))
+
+all:$(OBJS) $(APP)
+
+$(OBJS):%.o: %.cpp
 	$(C++) $(CCFLAGS) $< -c
 
-appserver: appserver.o
+appserver: appserver.o serial.o
 	$(C++) $^ -o $@ $(LDFLAGS)
-appclient: appclient.o
+appclient: appclient.o H264_UVC_TestAP.o h264_xu_ctrls.o v4l2uvc.o
 	$(C++) $^ -o $@ $(LDFLAGS)
 sendfile: sendfile.o
 	$(C++) $^ -o $@ $(LDFLAGS)
