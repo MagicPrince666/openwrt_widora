@@ -1,4 +1,4 @@
-CXX = mipsel-openwrt-linux-uclibc-g++
+#CXX = mipsel-openwrt-linux-uclibc-g++
 TARGET	= servo 
 
 DIR		= . 
