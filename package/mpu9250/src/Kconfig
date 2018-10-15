@@ -1,0 +1,4 @@
+config MPU_9250
+	tristate "mpu 9250"
+	help
+	  driver for MPU_9250

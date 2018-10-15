@@ -1,0 +1,1 @@
+obj-$(CONFIG_MPU_9250)	+= mpu9250driver.o
