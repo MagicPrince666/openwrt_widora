@@ -23,7 +23,7 @@ $(COBJS):%.o:%.c
 	$(CC) $(CFLAGS) $(INC) -c -o $(OBJPATH)/$(notdir $@) $< 
 
 $(TARGET):$(OBJPATH)
-	$(CXX) -o $@ $(OBJPATH)/*.o $(LDFLAGS)
+	$(CC) -o $@ $(OBJPATH)/*.o $(LDFLAGS)
 
 clean:
 	-rm $(OBJPATH)/*.o

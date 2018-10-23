@@ -495,6 +495,8 @@ void Lcd_Init(void)
 		printf("error\n");
 
 	mt76x8_gpio_set_pin_direction(11, 1);
+	mt76x8_gpio_set_pin_direction(39, 1);
+	mt76x8_gpio_set_pin_value(39, 1);
 
 	SPI_Open();//硬件SPI初始化
 	

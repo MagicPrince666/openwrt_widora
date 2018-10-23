@@ -21,6 +21,18 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA    #
 #                                                                              #
 *******************************************************************************/
+#ifndef __V4L2UVC_H
+#define __V4L2UVC_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <linux/videodev2.h>
+#include <sys/mman.h>
+#include <sys/ioctl.h>
 
 #define NB_BUFFER 16
 #define DHT_SIZE 420
@@ -66,3 +78,5 @@ int v4l2UpControl (int fd, int control);
 int v4l2DownControl (int fd, int control);
 int v4l2ToggleControl (int fd, int control);
 int v4l2ResetControl (int fd, int control);
+
+#endif

@@ -29,6 +29,7 @@
 #include "libar8020.h"
 #include "v4l2uvc.h"
 #include "h264_xu_ctrls.h"
+#include "H264_UVC_TestAP.h"
 //#include "ringbuffer.h"
 
 struct H264Format *gH264fmt = NULL;
@@ -36,14 +37,9 @@ struct H264Format *gH264fmt = NULL;
 int Dbg_Param = 0x1f;
 
 
-#define CLEAR(x) memset (&(x), 0, sizeof (x))
-
 struct v4l2_buffer buf0;
 void *mem0[32];
-struct buffer {
-	void *         start;
-	size_t         length;
-};
+
 
 static char            dev_name[16];
 struct buffer *         buffers         = NULL;
@@ -133,6 +129,7 @@ int init_mmap(void)
  	}
 
 	buffers = (buffer *)calloc (req.count, sizeof (*buffers));
+
 
 	if (!buffers)
 	{
@@ -347,7 +344,7 @@ void Init_264camera(const char *dev)
 	// 	printf("---create Record.264------success------- !\n");	
 }
 
-extern char stop;
+//extern char stop;
 //extern RingBuffer* rbuf;
 
 void * cap_video (void *arg)   
@@ -397,14 +394,11 @@ void * cap_video (void *arg)
 				w_cnt = 0;
 				do{
 
-					ret = Vedio_Port_Send((PORT)arg,&buf2[w_cnt],r_cnt - w_cnt);
+					ret = Video_Port_Send((PORT)arg,&buf2[w_cnt],r_cnt - w_cnt);
 					if(ret > 0)
 						w_cnt += ret;
 					else
 						usleep(1000);
-
-					if(stop)
-					break;
 
 				}while(w_cnt < r_cnt);
 
