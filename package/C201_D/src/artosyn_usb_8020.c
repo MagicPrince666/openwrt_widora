@@ -441,7 +441,7 @@ static void stream_on_callback(struct urb *urb)
     complete(&dev->int_out_completion);
 }
 
-//open��ʱ������Ƶ��(�̼�����)
+//open的时候开启视频流(固件特性)
 int Stream_On(struct usb_artosyn *dev)
 {
     struct urb *urb = NULL;
@@ -1009,7 +1009,7 @@ static ssize_t artosyn_write(struct file *file, const char *user_buffer,
                 return 0;
             }
             
-            //����usr data len �Ӱ�ͷ���Ӱ�β
+            //调整usr data len 加包头，加包尾
             
             usr_data_len += dev->usb_tx->slen;
             usr_data_len += dev->usb_tx->elen;
@@ -1020,12 +1020,12 @@ static ssize_t artosyn_write(struct file *file, const char *user_buffer,
             head_buf[7] = (char)usr_data_len;         //usr data len
         
                 
-            //���Ͱ�ͷ
+            //发送包头
             Tx1_Local_Buffer_Push(dev->usb_tx,head_buf,head_len);
             
             Tx1_Local_Buffer_Push(dev->usb_tx,dev->usb_tx->sbuf,dev->usb_tx->slen);
             
-            //�û�����
+            //用户数据
             
             while(cnt >= SINGLE_FIFO_SIZE)
             {
@@ -1043,7 +1043,7 @@ static ssize_t artosyn_write(struct file *file, const char *user_buffer,
             }
             
             
-            //���Ͱ�β
+            //发送包尾
             Tx1_Local_Buffer_Push(dev->usb_tx,dev->usb_tx->ebuf,dev->usb_tx->elen);
             
             return usr_data_len;
@@ -1716,7 +1716,7 @@ static int fifo_handle_pkg(void *_dev)
                 switch(find_state)
                 {
 
-                   case 2:         //βδ����
+                   case 2:         //尾未命中
 
                         if(dev->bulk_in_buffer[dev->bulk_in_filled / 5 * i] == 0xaa)
                         if(dev->bulk_in_buffer[dev->bulk_in_filled / 5 * i + 1] == 0xaa)
@@ -1734,7 +1734,7 @@ static int fifo_handle_pkg(void *_dev)
                     
                         break;
                         
-                    case 0:         //ͷδ����
+                    case 0:         //头未命中
 
                         if(dev->bulk_in_buffer[dev->bulk_in_filled / 5 * i] == 0x55)
                         if(dev->bulk_in_buffer[dev->bulk_in_filled / 5 * i + 1] == 0x55)
@@ -1753,7 +1753,7 @@ static int fifo_handle_pkg(void *_dev)
                         }
                         break;
                         
-                    case 1:         //ͷ������
+                    case 1:         //头已命中
 
                         if(need_back)
                         {
@@ -1761,7 +1761,7 @@ static int fifo_handle_pkg(void *_dev)
                             i --;
                         }
                         
-                        //�ֲ�
+                        //粗查
 
                         low = dev->bulk_in_filled / 5 * i;
                         hig = dev->bulk_in_filled;
@@ -1794,7 +1794,7 @@ static int fifo_handle_pkg(void *_dev)
                             
                         }
                                            
-                        //ϸ��
+                        //细查
                         for(j = low;j < dev->bulk_in_filled;j ++)
                         //for(j = dev->bulk_in_filled / 5 * i;j < dev->bulk_in_filled;j ++)
                         {
@@ -1811,7 +1811,7 @@ static int fifo_handle_pkg(void *_dev)
                                 
                                 head_num = j + 1;
 
-                                //����i��ֵ
+                                //调整i的值
                                 i = j * 5 / dev->bulk_in_filled;
                                 find_state = 2;
 
@@ -1821,7 +1821,7 @@ static int fifo_handle_pkg(void *_dev)
 
                         break;
 
-                    case 3:         //β������
+                    case 3:         //尾已命中
 
                         if(need_back)
                         {
@@ -1829,7 +1829,7 @@ static int fifo_handle_pkg(void *_dev)
                             i --;
                         }
                         
-                        //�ֲ�
+                        //粗查
                         low = dev->bulk_in_filled / 5 * i;
                         hig = dev->bulk_in_filled;
 
@@ -1857,7 +1857,7 @@ static int fifo_handle_pkg(void *_dev)
                                     hig = mid;   
                         }
 
-                        //ϸ��
+                        //细查
                         for(j = low;j < dev->bulk_in_filled;j ++)
                         //for(j = dev->bulk_in_filled / 5 * i;j < dev->bulk_in_filled;j ++)
                         {
@@ -1868,7 +1868,7 @@ static int fifo_handle_pkg(void *_dev)
                             {
                                 //pkg_end_cnt ++;
 
-                                //���ݴ���
+                                //数据处理
                                 max_flag = 0;
                                 while((index = getemptybuf(dev)) ==  dev->max_wr_counter)
                                 {

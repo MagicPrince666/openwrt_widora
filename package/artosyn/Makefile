@@ -28,7 +28,7 @@ define Package/artosyn/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/app/upgrade_demo/sample_upgrade $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/app/send_video/sample_transceiver $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/app/cmd_demo/sample_cmd $(1)/usr/bin/
-#	$(INSTALL_BIN) $(PKG_BUILD_DIR)/app/uvc_video/uvc_video $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/app/uvc_video/uvc_video $(1)/usr/bin/
 #	$(INSTALL_BIN) $(PKG_BUILD_DIR)/app/video_demo/vedio_demo $(1)/usr/bin/
 endef
 
