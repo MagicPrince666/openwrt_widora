@@ -100,7 +100,132 @@ void Sample_TRx_Handlesig(int signo)
     exit(-1);
 }
 
+extern struct vdIn *vd;
+extern struct buffer *buffers;
 
+void *Thread_Uvc_Tx(void *p)
+{
+    TX_PARAM *param = (TX_PARAM *)p;
+    int r_cnt,w_cnt;
+    int ret;
+    char buf0[40960];
+
+    struct v4l2_buffer buf;
+
+    struct timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = 10000;
+    fd_set rfds;
+    int retval=0;
+    char *buf2 = NULL;
+
+    PORT port;
+
+    if(Usb_Init() < 0)
+    {
+        printf("usb init err\n");        
+        return -1;
+    }
+    Video_Port_Open(&port,NULL);
+
+    Init_264camera(dev_name);
+    printf("uvc video send start\n");
+
+    printf("channel 0 send start\n");
+    
+    while(!param->stop)
+    {
+         CLEAR (buf);
+            
+        buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        buf.memory = V4L2_MEMORY_MMAP;
+
+        FD_ZERO(&rfds);
+        FD_SET(vd->fd, &rfds);
+        
+        retval=select(vd->fd + 1, &rfds, NULL, NULL, &tv);
+        if(retval<0)
+        {  
+            perror("select error\n");  
+        }
+        else//有数据要收
+        {       
+            ret = ioctl(vd->fd, VIDIOC_DQBUF, &buf);
+            if (ret < 0) 
+            {
+                printf("Unable to dequeue buffer!\n");
+                exit(1);
+            }     
+            
+            r_cnt = buf.bytesused;
+            // if(r_cnt <= 40960)
+            //     memcpy(buf0,buffers[buf.index].start,buf.bytesused);
+            // else
+            //     memcpy(buf0,buffers[buf.index].start,40960);
+            buf2 = (char *)(buffers[buf.index].start);
+
+            if(r_cnt > 0)
+            {
+                w_cnt = 0;
+                do{
+
+                    ret = Video_Port_Send(param->port,&buf2[w_cnt],r_cnt - w_cnt);
+                    if(ret > 0)
+                        w_cnt += ret;
+                    else
+                        usleep(1000);
+
+                }while(w_cnt < r_cnt);
+
+                printf("transmit buff\n");
+
+                //usleep(33000);
+            }
+            // else if(r_cnt == 0)
+            // {
+            //  usleep(100000);
+            //  continue;
+            // }
+            
+            ret = ioctl(vd->fd, VIDIOC_QBUF, &buf);
+            
+            if (ret < 0) 
+            {
+                printf("Unable to requeue buffer");
+                exit(1);
+            }
+        }
+        /*
+        r_cnt = read(param->txfile,buf0,10240);
+        if(r_cnt > 0)
+        {
+            w_cnt = 0;
+            do{
+                
+                ret = Video_Port_Send(param->port,&buf0[w_cnt],r_cnt - w_cnt);
+    
+                if(ret > 0)
+                    w_cnt += ret;
+                else
+                    usleep(1000);
+
+            }while(w_cnt < r_cnt);
+                        
+            usleep(33000);
+
+        }
+        else if(r_cnt == 0)
+        {
+             usleep(2000000);
+             param->stop = 1;
+             printf("end of file\n");
+            //lseek(tx_video, 0, SEEK_SET);
+        }
+        */
+    }
+
+    return NULL;
+}
 
 /******************************************************************************
 * function : to process stream sending
@@ -446,17 +571,16 @@ void *Thread_Pkg_Rx(void *p)
 * function : to process stream sending
 ******************************************************************************/
 
-extern struct vdIn *vd;
-extern struct buffer *buffers;
+
 
 //void *Thread_uvc_Tx(void *p)
-int Sample_uvc_Tx(int argc, char* argv[])
+int Sample_uvc_Tx()
 {
     PORT port0;
     int r_cnt;
     int w_cnt;
     int ret;
-    char buf0[40960];
+    //char buf0[40960];
 
 	struct v4l2_buffer buf;
 
@@ -465,7 +589,7 @@ int Sample_uvc_Tx(int argc, char* argv[])
     tv.tv_usec = 10000;
 	fd_set rfds;
     int retval=0;
-	//char *buf2 = NULL;
+	char *buf2 = NULL;
 
 
     if(Usb_Init() < 0)
@@ -473,6 +597,10 @@ int Sample_uvc_Tx(int argc, char* argv[])
         printf("usb init err\n");        
         return -1;
     }
+    
+    Init_264camera(dev_name);
+    printf("uvc video send start\n");
+    
     Video_Port_Open(&port0,NULL);
 
     if(port0 <= 0)
@@ -480,14 +608,7 @@ int Sample_uvc_Tx(int argc, char* argv[])
         printf("open err\n");
         return -1;            
     }
-
     printf("channel 0 send start\n");
-
-	
-
-    Init_264camera(dev_name);
-    printf("uvc video send start\n");
-    
     
     while(1)
     {
@@ -513,20 +634,21 @@ int Sample_uvc_Tx(int argc, char* argv[])
 				exit(1);
 			}	  
 			
-			//RingBuffer_write(rbuf,(char*)(buffers[buf.index].start),buf.bytesused);
 			//fwrite(buffers[buf.index].start, buf.bytesused, 1, rec_fp1);
 			//buf0 = (char *)(buffers[buf.index].start);
             r_cnt = buf.bytesused;
-            if(r_cnt <= 40960)
-                memcpy(buf0,buffers[buf.index].start,buf.bytesused);
-            else
-                memcpy(buf0,buffers[buf.index].start,40960);
+            // if(r_cnt <= 40960)
+            //     memcpy(buf0,buffers[buf.index].start,buf.bytesused);
+            // else
+            //     memcpy(buf0,buffers[buf.index].start,40960);
+            buf2 = (char *)(buffers[buf.index].start);
+
 			if(r_cnt > 0)
 			{
 				w_cnt = 0;
 				do{
 
-					ret = Video_Port_Send(port0,&buf0[w_cnt],r_cnt - w_cnt);
+					ret = Video_Port_Send(port0,&buf2[w_cnt],r_cnt - w_cnt);
 					if(ret > 0)
 						w_cnt += ret;
 					else
@@ -538,11 +660,11 @@ int Sample_uvc_Tx(int argc, char* argv[])
 
 				//usleep(33000);
 			}
-			else if(r_cnt == 0)
-			{
-				usleep(100000);
-				continue;
-			}
+			// else if(r_cnt == 0)
+			// {
+			// 	usleep(100000);
+			// 	continue;
+			// }
 			
 			ret = ioctl(vd->fd, VIDIOC_QBUF, &buf);
 			
@@ -625,6 +747,7 @@ int Sample_Chn0_Tx(int argc, char* argv[])
     close(txfile);
     Video_Port_Close(port0);
     Usb_Exit();
+    return 0;
 }
 
 /******************************************************************************
@@ -697,6 +820,7 @@ int Sample_Chn1_Tx(int argc, char* argv[])
     close(txfile);
     Video_Port_Close(port1);
     Usb_Exit();
+    return 0;
 }
 
 /******************************************************************************
@@ -943,6 +1067,7 @@ int Sample_Chn0_Rx(int argc, char* argv[])
     close(rxfile);
     Video_Port_Close(port0);
     Usb_Exit();
+    return 0;
 }
 
 /******************************************************************************
@@ -1008,6 +1133,7 @@ int Sample_Chn1_Rx(int argc, char* argv[])
     close(rxfile);
     Audio_Port_Close(port1);
     Usb_Exit();
+    return 0;
 }
 
 
@@ -1073,6 +1199,8 @@ int Sample_Double_Rx(int argc, char* argv[])
     
     pthread_join(ThreadId0,NULL);
     pthread_join(ThreadId1,NULL);
+
+    return 0;
 
 exit:    
     close(rxfile0);
@@ -1155,6 +1283,7 @@ int Sample_Pkg_Tx(int argc, char* argv[])
     pthread_join(ThreadId0,NULL);
     pthread_join(ThreadId1,NULL);
     pthread_join(ThreadId2,NULL);
+    return 0;
         
 exit:
     close(param0.txfile);
@@ -1209,6 +1338,7 @@ int Sample_Pkg_Rx(int argc, char* argv[])
         usleep(1000000);
     
     pthread_join(ThreadId,NULL);
+    return 0;
         
 exit:
     close(param.rxfile0);
@@ -1234,7 +1364,7 @@ int main(int argc, char* argv[])
         //Sample_TRx_Usage();
         //return -1;
         printf("used uvc video\n");
-        Sample_uvc_Tx(argc,argv);
+        Sample_uvc_Tx();
     }else
     {
         //printf("used uvc video\n");
@@ -1291,6 +1421,8 @@ int main(int argc, char* argv[])
     else
     { printf("program exit abnormally!\n"); }
     exit(ret);
+
+    return 0;
 }
 
 #ifdef __cplusplus

@@ -128,7 +128,8 @@ int init_mmap(void)
 		return -1;
  	}
 
-	buffers = (buffer *)calloc (req.count, sizeof (*buffers));
+	//buffers = (buffer *)calloc (req.count, sizeof (*buffers));
+	buffers = calloc (req.count, sizeof (*buffers));
 
 
 	if (!buffers)
@@ -371,7 +372,7 @@ void * cap_video (void *arg)
 		FD_ZERO(&rfds);
 		FD_SET(vd->fd, &rfds);
 		
-		retval=select(vd->fd + 1, &rfds, NULL, NULL, &tv);
+		retval=select(vd->fd + 1, &rfds, NULL, NULL, NULL);
 		if(retval<0)
 		{  
 			perror("select error\n");  
