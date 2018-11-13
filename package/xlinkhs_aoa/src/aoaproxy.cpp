@@ -17,17 +17,11 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#define	PIDFILE "/var/run/aoaproxy.pid"
-#define SOCKET_RETRY	1
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <signal.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
 #include <string.h>
 #include <pthread.h>
 #include <sys/stat.h>
@@ -36,110 +30,41 @@
 #include "aoaproxy.h"
 #include "accessory.h"
 #include "a2spipe.h"
-//#include "audio.h"
-#include "tcp.h"
-//#include "bluetooth.h"
 #include "log.h"
-#include "local_service.h"
 
 //控制主循环
 static int do_exit = 0;
 static libusb_context *ctx;
 //维护当前所有usb与对应socket的链表
 struct listentry *connectedDevices;
-pthread_t usbInventoryThread;
+//pthread_t usbInventoryThread;
 int doUpdateUsbInventory = 0;
 
-//static int timeIsUp(struct timeval *start, unsigned int timeoutMs);
-static void shutdownEverything();
-static void initSigHandler();
-static int initUsb();
-static void cleanupDeadDevices();
-static int updateUsbInventory(libusb_device **devs);
-static int connectDevice(libusb_device *device);
-static void disconnectDevice(libusb_device *dev);
-static void disconnectSocket(struct listentry *device);
 static int startUSBPipe(struct listentry *device);
 static void stopUSBPipe(struct listentry *device);
-static void sig_hdlr(int signum);
-static void tickleUsbInventoryThread();
-int do_fork_foo();
 
-static int haveBluetooth = 0;
-
-static const char *hostname = "localhost";
 static struct t_excludeList *exclude = NULL;
-static int portno = 8721;
 static int autoscan = 1;
-static int force = 0;
-static int do_fork = 0;
 
+/*
+static void a2s_usbrx_cb(struct libusb_transfer *transfer) {
+	usbXferThread *t = (usbXferThread*)transfer->user_data;
+	A2spipe::tickleUsbXferThread(t);
+}
+*/
 int main(int argc, char** argv) {
 	int r;
-	int opt;
-	int xcount=0;
-
-	while ((opt = getopt(argc, argv, "dfh:p:x:")) != -1) {
-	  switch (opt) {
-		case 'd':
-			do_fork = 1;
-			break;
-		case 'f':
-			force = 1;
-			break;
-		case 'p':
-			portno = atoi(optarg);
-			break;
-		case 'h':
-			hostname = strdup(optarg);
-			break;
-		case 'x':
-		{
-			if(strlen(optarg)  != 9 || optarg[4] != ':') {
-				fprintf(stderr, "invalid argument for -x: %s\n", optarg);
-				exit(EXIT_FAILURE);
-			}
-			struct t_excludeList *e;
-			int vid, pid;
-
-			e = (struct t_excludeList*)malloc(sizeof(struct t_excludeList));
-			e->next = NULL;
-
-			e->vid = strtol(optarg, NULL, 16);
-			e->pid = strtol(optarg+5, NULL, 16);
-
-			if (exclude == NULL) {
-				exclude = e;
-			} else {
-				struct t_excludeList *last = exclude;
-				while(last->next != NULL) {
-					last = last->next;
-				}
-				last->next = e;
-			}
-			xcount++;
-			break;
-		}
-		default: /* '?' */
-			fprintf(stderr, "Usage: %s [-h host] [-p port] [-f] [-x vid1:pid1] [-x vidn:pidn]\n",
-					argv[0]);
-			exit(EXIT_FAILURE);
-		}
-	}
+	//int numBytes = 0;
+	unsigned char *buff = new unsigned char[1024];
+	memset(buff,0,1024);
+	sprintf((char *)buff,"magic prince");
 
 	ctx = NULL;
 	connectedDevices = NULL;
 
-	//开启本地socketserver
-	create_start_service();
+	AoaProxy::initSigHandler();
 
-	if (do_fork)
-		do_fork_foo();
-
-	initSigHandler();
-
-	// it is important to init usb after the fork!
-	if (0 > initUsb()) {
+	if (0 > AoaProxy::initUsb()) {
 		logError("Failed to initialize USB\n");
 		return 1;
 	}
@@ -158,9 +83,18 @@ int main(int argc, char** argv) {
 
 		if (doUpdateUsbInventory == 1) {
 			doUpdateUsbInventory = 0;
-			cleanupDeadDevices();
+			AoaProxy::cleanupDeadDevices();
 			//尝试链接设备
-			updateUsbInventory(devs);
+			AoaProxy::updateUsbInventory(devs);
+			/*
+			libusb_fill_bulk_transfer(
+			connectedDevices->usbRxThread.xfr, 
+			connectedDevices->droid.usbHandle, 
+			connectedDevices->droid.outendp,
+			buff, 1024,
+			NULL, 
+			NULL, 0);
+			*/
 		}
 
 		r = libusb_handle_events(ctx);
@@ -174,6 +108,11 @@ int main(int argc, char** argv) {
 				break;
 			}
 		}
+		//libusb_interrupt_transfer(handle, 1, buff, 64, &numBytes, 100);
+		//初始化usbRxThread.xfr ，关联数据buffer
+		
+		//libusb_submit_transfer(connectedDevices->usbRxThread.xfr);
+		usleep(100000);
 	}
 
 	if (devs != NULL)
@@ -184,11 +123,13 @@ int main(int argc, char** argv) {
 		memset (&timer, 0, sizeof(timer));
 		setitimer (ITIMER_REAL, &timer, NULL);
 	}
-	shutdownEverything();
+	AoaProxy::shutdownEverything();
+
+	delete[] buff;
 	return EXIT_SUCCESS;
 }
 
-static void shutdownEverything() {
+void AoaProxy::shutdownEverything() {
 	logDebug("shutdownEverything\n");
 	do_exit = 1;
 
@@ -202,26 +143,14 @@ static void shutdownEverything() {
 	if (ctx != NULL)
 		libusb_exit(ctx); //close the session
 
-	// if (haveAudio) {
-	// 	deinitAudio(&audio);
-	// }
-
-	/*if (bt != NULL) {
-		deinitBluetooth(bt);
-		logDebug("waiting for bluetooth thread...");
-		if(0 != pthread_join(bt->thread, NULL)) {
-			logError("failed to join bluetooth thread");
-		}
-		free(bt);
-	}*/
-	logDebug("shutdown complete");
+	logDebug("shutdown complete\n");
 }
 
-static void tickleUsbInventoryThread() {
+void AoaProxy::tickleUsbInventoryThread() {
 	doUpdateUsbInventory = 1;
 }
 
-static int updateUsbInventory(libusb_device **devs) {
+int AoaProxy::updateUsbInventory(libusb_device **devs) {
 	static ssize_t cnt = 0;
 	static ssize_t lastCnt = 0;
 //	static libusb_device **devs;
@@ -282,11 +211,11 @@ static int updateUsbInventory(libusb_device **devs) {
 	}
 	lastDevs = devs;
 	lastCnt = cnt;
-
+	
 	return 0;
 }
 
-static int connectDevice(libusb_device *device) {
+int AoaProxy::connectDevice(libusb_device *device) {
 
 	logDebug("prepare to connect device \n");
 
@@ -294,13 +223,13 @@ static int connectDevice(libusb_device *device) {
 	//获取usb设备描述信息
 	int r = libusb_get_device_descriptor(device, &desc);
 	if (r < 0) {
-		logError("failed to get device descriptor: %d", r);
+		logError("failed to get device descriptor: %d\n", r);
 		return -1;
 	}
 
 	switch(desc.bDeviceClass) {
 	case 0x09:
-		logDebug("device 0x%04X:%04X has wrong deviceClass: 0x%02x",
+		logDebug("device 0x%04X:%04X has wrong deviceClass: 0x%02x\n",
 				desc.idVendor, desc.idProduct,
 				desc.bDeviceClass);
 		return -1;
@@ -308,28 +237,28 @@ static int connectDevice(libusb_device *device) {
 
 	struct t_excludeList *e = exclude;
 	while(e != NULL) {
-		logDebug("comparing device [%04x:%04x] and [%04x:%04x]",
+		logDebug("comparing device [%04x:%04x] and [%04x:%04x]\n",
 				desc.idVendor, desc.idProduct, e->vid, e->pid);
 		if(e->vid == desc.idVendor && e->pid == desc.idProduct) {
-			logDebug("device is on exclude list", desc.idVendor, desc.idProduct);
+			logDebug("device is on exclude list idVendor = %d idProduct = %d\n", desc.idVendor, desc.idProduct);
 			return -1;
 		}
 		e = e->next;
 	}
 
 	//检查当前设备是否处于accessory模式
-	if(!isDroidInAcc(device)) {
+	if(!Accessory::isDroidInAcc(device)) {
 		logDebug("attempting AOA on device 0x%04X:%04X\n",
 				desc.idVendor, desc.idProduct);
 		//写入要启动的应用的信息 开启android的accessory模式	
-		switchDroidToAcc(device, 1);
+		Accessory::switchDroidToAcc(device, 1);
 		return -1;
 	}
 
 	//entry管理socket与usb
-	struct listentry *entry = malloc(sizeof(struct listentry));
+	struct listentry *entry = (struct listentry *)malloc(sizeof(struct listentry));
 	if (entry == NULL) {
-		logError("Not enough RAM");
+		logError("Not enough RAM\n");
 		return -2;
 	}
 	bzero(entry, sizeof(struct listentry));
@@ -337,30 +266,10 @@ static int connectDevice(libusb_device *device) {
 	//entry拿到usb句柄device
 	entry->usbDevice = device;
 
-	//entry拿到socket句柄
-#ifdef SOCKET_RETRY
-	//连接本地socketserver, 返回socket客户端的描述符
-	while((r = connectTcpSocket(hostname, portno)) <= 0) {
-		logError("failed to setup socket: %d, retrying\n", r);
-		sleep(1);
-	}
-	//记录本地soket链接的描述符
-	entry->sockfd = r;
-	entry->socketDead = 0;
-#else
-	r = connectTcpSocket(hostname, portno);
-	if (r < 0) {
-		fprintf(LOG_ERR, "failed to setup socket: %d\n", r);
-		free(entry);
-		return -4;
-	}
-	entry->sockfd = r;
-	entry->socketDead = 0;
-#endif
 	//如果android设备已经是aoa模式,打开usb
 	logDebug("start setup droid \n");
 	//找到accessory接口并用接口信息初始化entry->droid
-	r = setupDroid(device, &entry->droid);
+	r = Accessory::setupDroid(device, &entry->droid);
 	if (r < 0) {
 		logError("failed to setup droid: %d\n", r);
 		free(entry);
@@ -383,16 +292,16 @@ static int connectDevice(libusb_device *device) {
 	//建立usb与socket互相通信的任务
 	r = startUSBPipe(entry);
 	if (r < 0) {
-		logError("failed to start pipe: %d", r);
+		logError("failed to start pipe: %d\n", r);
 		disconnectDevice(device);
 		return -5;
 	}
 
-	logDebug("new Android connected");
+	logDebug("new Android connected\n");
 	return 0;
 }
 
-static void disconnectDevice(libusb_device *dev) {
+void AoaProxy::disconnectDevice(libusb_device *dev) {
 	struct listentry *device = connectedDevices;
 
 	while(device != NULL) {
@@ -407,24 +316,21 @@ static void disconnectDevice(libusb_device *dev) {
 			}
 
 			stopUSBPipe(device);
-			disconnectSocket(device);
-			shutdownUSBDroid(device->usbDevice, &device->droid);
+			Accessory::shutdownUSBDroid(device->usbDevice, &device->droid);
 
 			free(device);
-			logDebug("Android disconnected");
+			logDebug("Android disconnected\n");
 			return;
 		}
 		device = device->next;
 	}
 }
 
-static void cleanupDeadDevices() {
+void AoaProxy::cleanupDeadDevices() {
 	struct listentry *device = connectedDevices;
 
 	while(device != NULL) {
-		if (device->socketDead) {
-			logDebug("found device with dead socket\n");
-		} else if (device->usbDead) {
+		if (device->usbDead) {
 			logDebug("found device with dead USB\n");
 		} else {
 			device = device->next;
@@ -436,14 +342,8 @@ static void cleanupDeadDevices() {
 	}
 }
 
-static void disconnectSocket(struct listentry *device) {
-	if (device->sockfd > 0) {
-		close(device->sockfd);
-		device->sockfd = 0;
-	}
-}
 
-static int initUsbXferThread(usbXferThread *t) {
+int initUsbXferThread(usbXferThread *t) {
 //	t->dead = 0;
 	t->xfr = libusb_alloc_transfer(0);
 	if (t->xfr == NULL) {
@@ -458,86 +358,74 @@ static int initUsbXferThread(usbXferThread *t) {
 	return 0;
 }
 
-static void destroyUsbXferThread(usbXferThread *t) {
+void destroyUsbXferThread(usbXferThread *t) {
 	pthread_mutex_destroy(&t->mutex);
 	pthread_cond_destroy(&t->condition);
 	libusb_free_transfer(t->xfr);
 }
 
-static int startUSBPipe(struct listentry *device) {
+int startUSBPipe(struct listentry *device) {
 	int r;
 	if(initUsbXferThread(&device->usbRxThread) < 0) {
 		logError("failed to allocate usb rx transfer\n");
 		return -1;
 	}
-	if(initUsbXferThread(&device->socketRxThread) < 0) {
+	if(initUsbXferThread(&device->usbTxThread) < 0) {
 		logError("failed to allocate usb tx transfer\n");
 		destroyUsbXferThread(&device->usbRxThread);
 		return -1;
 	}
 
 	//写入到usb任务
-	r = pthread_create(&device->usbRxThread.thread, NULL, (void*)&a2s_usbRxThread, (void*)device);
+	r = pthread_create(&device->usbRxThread.thread, NULL, A2spipe::a2s_usbRxThread, (void*)device);
 	if (r < 0) {
 		logError("failed to start usb rx thread\n");
 		return -1;
 	}
 
 	//读出到socket任务
-	r = pthread_create(&device->socketRxThread.thread, NULL, (void*)&a2s_socketRxThread, (void*)device);
+	r = pthread_create(&device->usbTxThread.thread, NULL, A2spipe::a2s_usbTxThread, (void*)device);
 	if (r < 0) {
 		// other thread is stopped in disconnectDevice method
-		logError("failed to start socket rx thread\n");
+		logError("failed to start usbTxThread thread\n");
 		return -1;
 	}
 
 	return 0;
 }
 
-static void stopUSBPipe(struct listentry *device) {
-//	device->do_exit = 1;
+void stopUSBPipe(struct listentry *device) {
 
 	device->usbRxThread.stop = 1;
 	if(device->usbRxThread.usbActive) {
-//		logDebug("canceling usb rx\n");
 		libusb_cancel_transfer(device->usbRxThread.xfr);
-//		logDebug("usb rx thread tickle\n");
 	}
-//	logDebug("usb rx thread tickle\n");
-	tickleUsbXferThread(&device->usbRxThread);
-//	logDebug("usb rx thread kill usr1\n");
+	A2spipe::tickleUsbXferThread(&device->usbRxThread);
 	pthread_kill(device->usbRxThread.thread, SIGUSR1);
 	logDebug("waiting for usb rx thread...\n");
 	if(0 != pthread_join(device->usbRxThread.thread, NULL)) {
 		logError("failed to join usb rx thread\n");
 	}
 
-	device->socketRxThread.stop = 1;
-	if(device->socketRxThread.usbActive) {
-//		logDebug("canceling usb tx\n");
-		libusb_cancel_transfer(device->socketRxThread.xfr);
+	device->usbTxThread.stop = 1;
+	if(device->usbTxThread.usbActive) {
+		libusb_cancel_transfer(device->usbTxThread.xfr);
 	}
-//	logDebug("socket rx thread tickle\n");
-	tickleUsbXferThread(&device->socketRxThread);
-//	logDebug("socket rx thread kill usr1\n");
-	pthread_kill(device->socketRxThread.thread, SIGUSR1);
-	logDebug("waiting for socket rx thread...\n");
-	if(0 != pthread_join(device->socketRxThread.thread, NULL)) {
-		logError("failed to join socket rx thread\n");
+	A2spipe::tickleUsbXferThread(&device->usbTxThread);
+	pthread_kill(device->usbTxThread.thread, SIGUSR1);
+	logDebug("waiting for usbTxThread thread...\n");
+	if(0 != pthread_join(device->usbTxThread.thread, NULL)) {
+		logError("failed to join usbTxThread thread\n");
 	}
 
-//	logDebug("usb rx thread destroy!\n");
 	destroyUsbXferThread(&device->usbRxThread);
-//	logDebug("socket rx thread destroy!\n");
-	destroyUsbXferThread(&device->socketRxThread);
-	close(device->sockfd);
+	destroyUsbXferThread(&device->usbTxThread);
 
 	logDebug("threads stopped\n");
 }
-
 int audioError = 1;
 
-static void initSigHandler() {
+void AoaProxy::initSigHandler() {
 	struct sigaction sigact;
 	sigact.sa_handler = sig_hdlr;
 	sigemptyset(&sigact.sa_mask);
@@ -549,9 +437,8 @@ static void initSigHandler() {
 	sigaction(SIGALRM, &sigact, NULL);
 }
 
-static void sig_hdlr(int signum)
+void AoaProxy::sig_hdlr(int signum)
 {
-//	fprintf(LOG_DEB, "received signal [%d]\n", signum);
 	switch (signum) {
 	case SIGINT:
 		logDebug("received SIGINT\n");
@@ -559,18 +446,13 @@ static void sig_hdlr(int signum)
 		exit(1);
 		break;
 	case SIGUSR1:
-		// USR1 is used to stop usb/socket rx threads.
-		// when this signal arrives here, the thread was
-		// already dead when the signal was sent.
 		logDebug("received SIGUSR1\n");
-		// ignore it.
 		break;
 	case SIGUSR2:
 		tickleUsbInventoryThread();
 		break;
 	case SIGALRM:
 	case SIGVTALRM:
-	    //logDebug("received SIGVTALRM\n");
 		tickleUsbInventoryThread();
 		break;
 	default:
@@ -578,7 +460,7 @@ static void sig_hdlr(int signum)
 	}
 }
 
-static int initUsb() {
+int AoaProxy::initUsb() {
 
 	int r;
 	r = libusb_init(&ctx);
@@ -586,38 +468,6 @@ static int initUsb() {
 		return r;
 	}
 	libusb_set_debug(ctx, 3);
-	return 0;
-}
-
-int do_fork_foo(){
-	pid_t thisPid = fork();
-	if (thisPid < 0) {
-		printf("Failed to fork\n");
-		return 1;
-	}
-
-	if (thisPid > 0) {
-		FILE *pidfile = fopen(PIDFILE, "w");
-		if (pidfile != NULL) {
-			fprintf(pidfile,"%d\n", thisPid);
-			fclose(pidfile);
-		} else {
-			perror("failed to create pidfile");
-		}
-		// this is parent.
-		exit(0);
-	}
-
-	pid_t sid = 0;
-	sid = setsid();
-	if(sid < 0)
-	{
-		logError("setsid() failed: %d", sid);
-		return 2;
-	}
-	close(STDIN_FILENO);
-	close(STDOUT_FILENO);
-	close(STDERR_FILENO);
 	return 0;
 }
 

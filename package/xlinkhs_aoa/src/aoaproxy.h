@@ -44,28 +44,33 @@ typedef struct t_usbXferThread {
 	int tickle;
 } usbXferThread;
 
-typedef struct t_audioXfer {
-	int stop;
-} audioXfer;
 
 typedef struct listentry {
 	libusb_device *usbDevice; //usb设备
-	int sockfd;
-	int socketDead;
+	int TxDead;
 	int usbDead;
 
 	accessory_droid droid;  //accessory信息
-//	pid_t pipePid;
-//	int do_exit;
 
 	usbXferThread usbRxThread;      //写入usb线程
-	usbXferThread socketRxThread;   //读取usb线程
-	audioXfer audio;
+	usbXferThread usbTxThread;   //读取usb线程
 
 	struct listentry *prev;
 	struct listentry *next;
 } t_listentry;
 
-
+class AoaProxy
+{
+public:
+	static void shutdownEverything();
+	static void initSigHandler();
+	static int initUsb();
+	static void cleanupDeadDevices();
+	static int updateUsbInventory(libusb_device **devs);
+	static int connectDevice(libusb_device *device);
+	static void disconnectDevice(libusb_device *dev);
+	static void sig_hdlr(int signum);
+	static void tickleUsbInventoryThread();
+};
 
 #endif /* AOAPROXY_H_ */

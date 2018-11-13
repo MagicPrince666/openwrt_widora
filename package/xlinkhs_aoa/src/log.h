@@ -26,6 +26,7 @@
 #include <syslog.h>
 #include <stdio.h>
 
+#undef LOG_ERR
 #define	LOG_ERR	stderr
 //#define	LOG_DEB stdout
 #define	LOG_DEB stderr

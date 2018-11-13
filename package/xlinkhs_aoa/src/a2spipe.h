@@ -26,11 +26,12 @@
 #include "aoaproxy.h"
 #include "accessory.h"
 
-void tickleUsbXferThread(usbXferThread *t);
-void* a2s_usbRxThread( void *d );
-void* a2s_socketRxThread( void *d );
-
-int fnusb_stop_iso(struct listentry *device, libusb_context *ctx);
-int fnusb_start_iso(struct listentry *device, fnusb_iso_cb cb, int ep, int xfers, int pkts, int len);
+class A2spipe
+{
+public:
+    static void tickleUsbXferThread(usbXferThread *t);
+    static void* a2s_usbRxThread( void *d );
+    static void* a2s_usbTxThread( void *d );
+};
 
 #endif /* A2SPIPE_H_ */

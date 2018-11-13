@@ -26,14 +26,14 @@
 #include "accessory.h"
 #include "log.h"
 
-const char *vendor = "prince";
+const char *vendor = "Huang Liquan";
 const char *model = "android.usbaoa";
-const char *description = "Android Aoa Interface";
-const char *version = "0.1";
+const char *description = "Android AOA Interface";
+const char *version = "0.2";
 const char *uri = "http://107.182.186.137";
-const char *serial = "3a013a013a01";
+const char *serial = "xag3a01";
 
-int setupDroid(libusb_device *usbDevice, accessory_droid *device) {
+int Accessory::setupDroid(libusb_device *usbDevice, accessory_droid *device) {
 
 	bzero(device, sizeof(accessory_droid));
 
@@ -77,12 +77,8 @@ int setupDroid(libusb_device *usbDevice, accessory_droid *device) {
 				logDebug( "interface %d is accessory candidate\n", i);
 				for(k=0; k < (int)interdesc->bNumEndpoints; k++) {
 					epdesc = &interdesc->endpoint[k];
-//					cout << "[::AOADevice] acc ep candidate 0x" << hex << (int)epdesc->bEndpointAddress << endl;
-//					cout << "\tinendp: " << hex << (int)inendp << endl;
-//					cout << "\toutendp: " << hex << (int)outendp << endl;
-//					cout << "\tresult: " << (int)(epdesc->bEndpointAddress & 0x80) << endl;
+
 					if (epdesc->bmAttributes != 0x02) {
-//						cout << "[startCBS] non-bulk ep #" << k << " :" << (int)epdesc->bmAttributes << endl;
 						break;
 					}
 
@@ -117,7 +113,6 @@ int setupDroid(libusb_device *usbDevice, accessory_droid *device) {
 					epdesc = &interdesc->endpoint[k];
 					if (epdesc->bmAttributes != ((3 << 2) | (1 << 0))) {
 						logDebug("skipping non-iso ep\n");
-//						cout << "[startCBS] non-iso ep #" << k << " :" << (int)epdesc->bmAttributes << endl;
 						break;
 					}
 					device->audioendp = epdesc->bEndpointAddress;
@@ -172,7 +167,7 @@ int setupDroid(libusb_device *usbDevice, accessory_droid *device) {
 	return 0;
 }
 
-int shutdownUSBDroid(libusb_device *usbDevice, accessory_droid *device) {
+int Accessory::shutdownUSBDroid(libusb_device *usbDevice, accessory_droid *device) {
 
 	if (device->audioendp)
 		libusb_release_interface(device->usbHandle, device->audioInterface);
@@ -186,7 +181,7 @@ int shutdownUSBDroid(libusb_device *usbDevice, accessory_droid *device) {
 	return 0;
 }
 
-int isDroidInAcc(libusb_device *dev) {
+int Accessory::isDroidInAcc(libusb_device *dev) {
 	struct libusb_device_descriptor desc;
 	int r = libusb_get_device_descriptor(dev, &desc);
 	if (r < 0) {
@@ -205,7 +200,6 @@ int isDroidInAcc(libusb_device *dev) {
 		case PID_AOA_AU:
 		case PID_AOA_AU_ADB:
 			logDebug("device is audio-only\n");
-//			logDebug( "device is audio-only\n");
 			break;
 		default:
 			break;
@@ -215,19 +209,8 @@ int isDroidInAcc(libusb_device *dev) {
 	return 0;
 }
 
-/**
-typedef struct _USB_SETUP_PACKET
-{
- REQUEST_TYPE bmRequestType;
- BYTE         bRequest; //请求类型
- WORD_BYTE    wValue;
- WORD_BYTE    wIndex;
- WORD         wLength;
-} USB_SETUP_PACKET;
-*/
-
 //用于切换android设备到acc模式 
-void switchDroidToAcc(libusb_device *dev, int force) {
+void Accessory::switchDroidToAcc(libusb_device *dev, int force) {
 	struct libusb_device_handle* handle;
 	unsigned char ioBuffer[2];
 	int r;
@@ -265,7 +248,6 @@ void switchDroidToAcc(libusb_device *dev, int force) {
 
 	deviceProtocol = ioBuffer[1] << 8 | ioBuffer[0];
 	if (deviceProtocol < AOA_PROTOCOL_MIN || deviceProtocol > AOA_PROTOCOL_MAX) {
-//		logDebug("Unsupported AOA protocol %d\n", deviceProtocol);
 		logDebug( "Unsupported AOA protocol %d\n", deviceProtocol);
 		libusb_close(handle);
 		return;

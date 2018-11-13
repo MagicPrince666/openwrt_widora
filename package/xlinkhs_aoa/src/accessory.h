@@ -68,9 +68,13 @@ typedef struct t_accessory_droid {
 	fnusb_isoc_stream isocStream;
 } accessory_droid;
 
-int isDroidInAcc(libusb_device *dev);
-void switchDroidToAcc(libusb_device *dev, int force);
-int setupDroid(libusb_device *usbDevice, accessory_droid *device);
-int shutdownUSBDroid(libusb_device *usbDevice, accessory_droid *device);
+class Accessory
+{
+public:
+	static int isDroidInAcc(libusb_device *dev);
+	static void switchDroidToAcc(libusb_device *dev, int force);
+	static int setupDroid(libusb_device *usbDevice, accessory_droid *device);
+	static int shutdownUSBDroid(libusb_device *usbDevice, accessory_droid *device);
+};
 
 #endif /* ACCESSORY_H_ */

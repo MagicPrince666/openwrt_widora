@@ -11,7 +11,7 @@ define Package/$(PKG_NAME)
 	CATEGORY:=Utilities
 	TITLE:=xlinkhs for android aoa
 	SUBMENU:=XAG
-	DEPENDS:= +libusb-1.0 +libpthread
+	DEPENDS:= +libusb-1.0 +libpthread +libstdcpp
 endef
 
 define Package/$(PKG_NAME)/description
