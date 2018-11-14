@@ -86,15 +86,7 @@ int main(int argc, char** argv) {
 			AoaProxy::cleanupDeadDevices();
 			//尝试链接设备
 			AoaProxy::updateUsbInventory(devs);
-			/*
-			libusb_fill_bulk_transfer(
-			connectedDevices->usbRxThread.xfr, 
-			connectedDevices->droid.usbHandle, 
-			connectedDevices->droid.outendp,
-			buff, 1024,
-			NULL, 
-			NULL, 0);
-			*/
+		
 		}
 
 		r = libusb_handle_events(ctx);
@@ -108,11 +100,6 @@ int main(int argc, char** argv) {
 				break;
 			}
 		}
-		//libusb_interrupt_transfer(handle, 1, buff, 64, &numBytes, 100);
-		//初始化usbRxThread.xfr ，关联数据buffer
-		
-		//libusb_submit_transfer(connectedDevices->usbRxThread.xfr);
-		usleep(100000);
 	}
 
 	if (devs != NULL)

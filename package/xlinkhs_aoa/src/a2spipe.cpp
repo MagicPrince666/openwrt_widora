@@ -110,6 +110,8 @@ void *A2spipe::a2s_usbRxThread( void *d ) {
 		default:
 			break;
 		}
+		usleep(100000);
+			
 	}
 
 	device->usbRxThread.stopped = 1;
@@ -127,7 +129,7 @@ void *A2spipe::a2s_usbTxThread( void *d ) {
 
 	unsigned char buffer[device->droid.outpacketsize];
 	int rxBytes = 0;
-	int r;
+	int r,times = 0;
 
     FILE* tx_video = NULL;
 
@@ -200,6 +202,12 @@ void *A2spipe::a2s_usbTxThread( void *d ) {
 		default:
 //			logDebug("a2s_socketRxThread usb error %d, ignoring\n", device->socketRxThread.xfr->status);
 			break;
+		}
+		times ++;
+		if(times >= 4)
+		{
+			times = 0;
+			usleep(33000);
 		}
 	}
 
