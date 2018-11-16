@@ -1,7 +1,7 @@
 /**********
 This library is free software; you can redistribute it and/or modify it under
 the terms of the GNU Lesser General Public License as published by the
-Free Software Foundation; either version 2.1 of the License, or (at your
+Free Software Foundation; either version 3 of the License, or (at your
 option) any later version. (See <http://www.gnu.org/copyleft/lesser.html>.)
 
 This library is distributed in the hope that it will be useful, but WITHOUT
@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2016 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2018 Live Networks, Inc.  All rights reserved.
 // RTP sink for H.264 or H.265 video
 // Implementation
 
@@ -105,11 +105,7 @@ H264or5VideoRTPSink::~H264or5VideoRTPSink() {
   fSource = fOurFragmenter; // hack: in case "fSource" had gotten set to NULL before we were called
   delete[] fFmtpSDPLine;
   delete[] fVPS; delete[] fSPS; delete[] fPPS;
-
-      printf("H264or5VideoRTPSink::~H264or5VideoRTPSink() 1 \n");
-
   stopPlaying(); // call this now, because we won't have our 'fragmenter' when the base class destructor calls it later.
-    printf("H264or5VideoRTPSink::~H264or5VideoRTPSink() 2 \n");
 
   // Close our 'fragmenter' as well:
   Medium::close(fOurFragmenter);
@@ -288,12 +284,9 @@ void H264or5Fragmenter::afterGettingFrame1(unsigned frameSize,
 					   struct timeval presentationTime,
 					   unsigned durationInMicroseconds) {
   fNumValidDataBytes += frameSize;
-  
-
   fSaveNumTruncatedBytes = numTruncatedBytes;
   fPresentationTime = presentationTime;
   fDurationInMicroseconds = durationInMicroseconds;
- // printf("H264or5Fragmenter::afterGettingFrame1 numTruncatedBytes:%d afterGettingFrame1:%u\n", numTruncatedBytes,fNumValidDataBytes);
 
   // Deliver data to the client:
   doGetNextFrame();

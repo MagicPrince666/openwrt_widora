@@ -1,7 +1,7 @@
 /**********
 This library is free software; you can redistribute it and/or modify it under
 the terms of the GNU Lesser General Public License as published by the
-Free Software Foundation; either version 2.1 of the License, or (at your
+Free Software Foundation; either version 3 of the License, or (at your
 option) any later version. (See <http://www.gnu.org/copyleft/lesser.html>.)
 
 This library is distributed in the hope that it will be useful, but WITHOUT
@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2016 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2018 Live Networks, Inc.  All rights reserved.
 // Media Sinks
 // Implementation
 
@@ -29,11 +29,7 @@ MediaSink::MediaSink(UsageEnvironment& env)
 }
 
 MediaSink::~MediaSink() {
-  printf("MediaSink::~!MediaSink 1 \n");
-  
   stopPlaying();
-  printf("MediaSink::~!MediaSink 2 \n");
-  
 }
 
 Boolean MediaSink::isSink() const {
@@ -65,20 +61,16 @@ Boolean MediaSink::startPlaying(MediaSource& source,
 				afterPlayingFunc* afterFunc,
 				void* afterClientData) {
   // Make sure we're not already being played:
-  printf("MediaSink::startPlaying 1 \n");
   if (fSource != NULL) {
     envir().setResultMsg("This sink is already being played");
     return False;
   }
-  printf("MediaSink::startPlaying 2");
 
   // Make sure our source is compatible:
   if (!sourceIsCompatibleWithUs(source)) {
     envir().setResultMsg("MediaSink::startPlaying(): source is not compatible!");
     return False;
   }
-  printf("MediaSink::startPlaying 3");
-  
   fSource = (FramedSource*)&source;
 
   fAfterFunc = afterFunc;
@@ -88,17 +80,10 @@ Boolean MediaSink::startPlaying(MediaSource& source,
 
 void MediaSink::stopPlaying() {
   // First, tell the source that we're no longer interested:
-      printf(" MediaSink::stopPlaying()  1");
-  
-  if (fSource != NULL) 
-  fSource->stopGettingFrames();
-
- printf(" MediaSink::stopPlaying()  2");
-
+  if (fSource != NULL) fSource->stopGettingFrames();
 
   // Cancel any pending tasks:
   envir().taskScheduler().unscheduleDelayedTask(nextTask());
-      printf(" MediaSink::stopPlaying()  3");
 
   fSource = NULL; // indicates that we can be played again
   fAfterFunc = NULL;

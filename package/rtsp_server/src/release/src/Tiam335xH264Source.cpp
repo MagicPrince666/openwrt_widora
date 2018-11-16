@@ -7,7 +7,7 @@
 
 #include "Tiam335xH264Source.hh"
 #include "FetchData.hh"
-#include "cbuf.h"
+
 
 # define __DBGFUNS
 # ifdef __DBGFUNS
@@ -22,7 +22,6 @@ FILE* rec_file = NULL;
 
 bool emptyBufferFlag = true;
 
-// extern cbuf_t g_cbuf;
 Tiam335xH264Source::Tiam335xH264Source(UsageEnvironment& env):
   FramedSource(env),m_pToken(0)
 {

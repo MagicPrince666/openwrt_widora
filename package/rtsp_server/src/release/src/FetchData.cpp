@@ -16,7 +16,6 @@
 #include <sys/time.h>
 #include <signal.h>
 #include "CONSTANT.h"
-#include "cbuf.h"
 #include "Tiam335xH264Source.hh"
 #include "v4l2uvc.h"
 #include "h264_xu_ctrls.h"
@@ -762,7 +761,6 @@ int FetchData::getData(void* fTo, unsigned fMaxSize, unsigned& fFrameSize, unsig
 #endif
 
 bool FetchData::s_b_running=false;
-cbuf_t FetchData::data; 
 pthread_t s_thread;
 FetchData::FetchData()
 {
@@ -781,9 +779,7 @@ void FetchData::EmptyBuffer()
 void FetchData::startCap()
 {
 	s_b_running = true;
-	data.CUBFEACHDATALEN = 200000;
 	printf("FetchData startCap\n"); 
-	cbuf_init(&data);
 
 	if(!s_quit)
 	{
@@ -805,7 +801,6 @@ void FetchData::stopCap()
 	s_b_running = false;
 	printf("FetchData stopCap\n");  
     s_quit = true;
-	cbuf_destroy(&data);
 
 	#ifdef SOFT_H264
 	Uinit(cam);

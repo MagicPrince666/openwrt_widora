@@ -1,7 +1,7 @@
 /**********
 This library is free software; you can redistribute it and/or modify it under
 the terms of the GNU Lesser General Public License as published by the
-Free Software Foundation; either version 2.1 of the License, or (at your
+Free Software Foundation; either version 3 of the License, or (at your
 option) any later version. (See <http://www.gnu.org/copyleft/lesser.html>.)
 
 This library is distributed in the hope that it will be useful, but WITHOUT
@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2016 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2018 Live Networks, Inc.  All rights reserved.
 // A simplified version of "H264or5VideoStreamFramer" that takes only complete,
 // discrete frames (rather than an arbitrary byte stream) as input.
 // This avoids the parsing and data copying overhead of the full
@@ -70,7 +70,7 @@ void H264or5VideoStreamDiscreteFramer
   // Once again, to be clear: The NAL units that you feed to a "H264or5VideoStreamDiscreteFramer"
   // MUST NOT include start codes.
   if (frameSize >= 4 && fTo[0] == 0 && fTo[1] == 0 && ((fTo[2] == 0 && fTo[3] == 1) || fTo[2] == 1)) {
-    //envir() << "H264or5VideoStreamDiscreteFramer error: MPEG 'start code' seen in the input\n";
+    envir() << "H264or5VideoStreamDiscreteFramer error: MPEG 'start code' seen in the input\n";
   } else if (isVPS(nal_unit_type)) { // Video parameter set (VPS)
     saveCopyOfVPS(fTo, frameSize);
   } else if (isSPS(nal_unit_type)) { // Sequence parameter set (SPS)

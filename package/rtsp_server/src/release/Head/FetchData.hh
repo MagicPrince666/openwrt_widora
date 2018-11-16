@@ -1,7 +1,6 @@
 #ifndef _FETCH_DATA_H_
 #define _FETCH_DATA_H_
 
-#include "cbuf.h"
 
 class FetchData
 {
@@ -16,7 +15,6 @@ public:
     static int getData(void* fTo, unsigned fMaxSize, unsigned& fFrameSize, unsigned& fNumTruncatedBytes);
 
 public:
-    static cbuf_t data; 
 
     static void* s_source;
 

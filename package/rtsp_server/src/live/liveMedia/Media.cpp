@@ -1,7 +1,7 @@
 /**********
 This library is free software; you can redistribute it and/or modify it under
 the terms of the GNU Lesser General Public License as published by the
-Free Software Foundation; either version 2.1 of the License, or (at your
+Free Software Foundation; either version 3 of the License, or (at your
 option) any later version. (See <http://www.gnu.org/copyleft/lesser.html>.)
 
 This library is distributed in the hope that it will be useful, but WITHOUT
@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2016 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2018 Live Networks, Inc.  All rights reserved.
 // Media
 // Implementation
 
@@ -50,17 +50,13 @@ Boolean Medium::lookupByName(UsageEnvironment& env, char const* mediumName,
 }
 
 void Medium::close(UsageEnvironment& env, char const* name) {
-  printf("Medium::close long 1 name:%s\n",name);
   MediaLookupTable::ourMedia(env)->remove(name);
-  printf("Medium::close long 2 \n");
-  
 }
 
 void Medium::close(Medium* medium) {
   if (medium == NULL) return;
-printf("Medium::close 1 \n");
+
   close(medium->envir(), medium->name());
-  printf("Medium::close 2 \n");
 }
 
 Boolean Medium::isSource() const {
@@ -119,20 +115,12 @@ _Tables::~_Tables() {
 ////////// MediaLookupTable implementation //////////
 
 MediaLookupTable* MediaLookupTable::ourMedia(UsageEnvironment& env) {
-      //printf("MediaLookupTable::ourMedia 1\n");
-  
   _Tables* ourTables = _Tables::getOurTables(env);
-      //printf("MediaLookupTable::ourMedia 2\n");
-  
   if (ourTables->mediaTable == NULL) {
     // Create a new table to record the media that are to be created in
     // this environment:
-      //printf("MediaLookupTable::ourMedia 3\n");
-    
     ourTables->mediaTable = new MediaLookupTable(env);
   }
-      //printf("MediaLookupTable::ourMedia 4\n");
-  
   return ourTables->mediaTable;
 }
 
@@ -145,28 +133,18 @@ void MediaLookupTable::addNew(Medium* medium, char* mediumName) {
 }
 
 void MediaLookupTable::remove(char const* name) {
-      printf("MediaLookupTable::remove -1 name:%s\n",name);
-  
   Medium* medium = lookup(name);
-      printf("MediaLookupTable::remove -2   medium:%d\n", medium);
-  
   if (medium != NULL) {
     fTable->Remove(name);
     if (fTable->IsEmpty()) {
       // We can also delete ourselves (to reclaim space):
       _Tables* ourTables = _Tables::getOurTables(fEnv);
-      printf("MediaLookupTable::remove 1\n");
       delete this;
-      printf("MediaLookupTable::remove 2\n");
-      
       ourTables->mediaTable = NULL;
       ourTables->reclaimIfPossible();
     }
-      printf("MediaLookupTable::remove 3\n");
 
-      delete medium;
-      printf("MediaLookupTable::remove 4\n");
-    
+    delete medium;
   }
 }
 

@@ -1,7 +1,7 @@
 /**********
 This library is free software; you can redistribute it and/or modify it under
 the terms of the GNU Lesser General Public License as published by the
-Free Software Foundation; either version 2.1 of the License, or (at your
+Free Software Foundation; either version 3 of the License, or (at your
 option) any later version. (See <http://www.gnu.org/copyleft/lesser.html>.)
 
 This library is distributed in the hope that it will be useful, but WITHOUT
@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2016 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2018 Live Networks, Inc.  All rights reserved.
 // RTP sink for a common kind of payload format: Those which pack multiple,
 // complete codec frames (as many as possible) into each RTP packet.
 // Implementation
@@ -29,16 +29,9 @@ void MultiFramedRTPSink::setPacketSizes(unsigned preferredPacketSize,
   if (preferredPacketSize > maxPacketSize || preferredPacketSize == 0) return;
       // sanity check
 
-  printf("MultiFramedRTPSink::setPacketSizes 1");
   delete fOutBuf;
-  printf("MultiFramedRTPSink::setPacketSizes 2");
-  
   fOutBuf = new OutPacketBuffer(preferredPacketSize, maxPacketSize);
-  printf("MultiFramedRTPSink::setPacketSizes 3");
-  
   fOurMaxPacketSize = maxPacketSize; // save value, in case subclasses need it
-  printf("MultiFramedRTPSink::setPacketSizes 4");
-  
 }
 
 #ifndef RTP_PAYLOAD_MAX_SIZE
@@ -64,22 +57,7 @@ MultiFramedRTPSink::MultiFramedRTPSink(UsageEnvironment& env,
 }
 
 MultiFramedRTPSink::~MultiFramedRTPSink() {
- printf("MultiFramedRTPSink::~MultiFramedRTPSink()  1 \n");
-
-  if(fOutBuf)
-  
-  {
- printf("MultiFramedRTPSink::~MultiFramedRTPSink()  1-1 \n");
-    delete fOutBuf;
- printf("MultiFramedRTPSink::~MultiFramedRTPSink()  1-2 \n");
-    fOutBuf = NULL;
- printf("MultiFramedRTPSink::~MultiFramedRTPSink()  1-3 \n");
-    
-  }
-  
-
- printf("MultiFramedRTPSink::~MultiFramedRTPSink()  2 \n");
-  
+  delete fOutBuf;
 }
 
 void MultiFramedRTPSink
@@ -178,8 +156,6 @@ void MultiFramedRTPSink::setFramePadding(unsigned numPaddingBytes) {
 Boolean MultiFramedRTPSink::continuePlaying() {
   // Send the first packet.
   // (This will also schedule any future sends.)
-    printf("MultiFramedRTPSink::continuePlaying() 1");
-
   buildAndSendPacket(True);
   return True;
 }
@@ -191,8 +167,6 @@ void MultiFramedRTPSink::stopPlaying() {
 
   // Then call the default "stopPlaying()" function:
   MediaSink::stopPlaying();
-    printf("MultiFramedRTPSink::stopPlaying() 1 \n");
-  
 }
 
 void MultiFramedRTPSink::buildAndSendPacket(Boolean isFirstPacket) {

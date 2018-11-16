@@ -2,8 +2,9 @@ INCLUDES = -Iinclude -I../groupsock/include
 PREFIX = /usr/local
 LIBDIR = $(PREFIX)/lib
 ##### Change the following for your environment:
-CROSS_COMPILE?=		/Volumes/WPJ342/chaos_calmer/staging_dir/toolchain-mips_34kc_gcc-4.8-linaro_uClibc-0.9.33.2/bin/mips-openwrt-linux-uclibc-
-export STAGING_DIR = /Volumes/WPJ342/chaos_calmer/openwrt/staging_dir/toolchain-mips_34kc_gcc-4.8-linaro_uClibc-0.9.33.2/bin/·
+#CROSS_COMPILE?=		mips-openwrt-linux-uclibc-
+CROSS_COMPILE?= $(CROSS)
+#export STAGING_DIR = /Volumes/WPJ342/chaos_calmer/openwrt/staging_dir/toolchain-mips_34kc_gcc-4.8-linaro_uClibc-0.9.33.2/bin/
 COMPILE_OPTS =		$(INCLUDES) -I. -O2 -DSOCKLEN_T=socklen_t -DNO_SSTREAM=1 -D_LARGEFILE_SOURCE=1 -D_FILE_OFFSET_BITS=64 -DLOCALE_NOT_USED
 C =			c
 C_COMPILER =		$(CROSS_COMPILE)gcc
