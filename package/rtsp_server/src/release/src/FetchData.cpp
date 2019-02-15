@@ -172,7 +172,7 @@ int init_device(int width, int height,int format)
 	fmt.fmt.pix.height      = height;
 	fmt.fmt.pix.pixelformat = format;
 	fmt.fmt.pix.field       = V4L2_FIELD_ANY;
-
+	printf("set width = %d ;height = %d\n",fmt.fmt.pix.width,fmt.fmt.pix.height);
 	if (-1 == xioctl (vd->fd, VIDIOC_S_FMT, &fmt))
 		return errnoexit ("VIDIOC_S_FMT");
 
@@ -192,6 +192,10 @@ int init_device(int width, int height,int format)
 	parm.parm.capture.timeperframe.denominator = getFps();
 	//parm.parm.capture.timeperframe.denominator = 30; 
 	ioctl(vd->fd, VIDIOC_S_PARM, &parm);
+
+	if (-1 == xioctl (vd->fd, VIDIOC_G_FMT, &fmt))
+		return errnoexit ("VIDIOC_G_FMT");
+	printf("get width = %d ;height = %d\n",fmt.fmt.pix.width,fmt.fmt.pix.height);
 
 
 	int init_mmap(void);
@@ -294,8 +298,8 @@ int start_previewing(void)
 
 int cameraInit()
 {	
-	int width = 1280; 
-	int height = 720;
+	int width = 1920; 
+	int height = 1080;
 		
 	int format = V4L2_PIX_FMT_H264;	
 	int ret;
