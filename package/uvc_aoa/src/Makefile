@@ -29,5 +29,5 @@ $(TARGET):$(OBJPATH)
 	$(CC) -o $@ $(OBJPATH)/*.o $(LDFLAGS)
 
 clean:
-	-rm $(OBJPATH)/*.o
-	-rm $(TARGET)
+	-rm -f $(OBJPATH)/*.o
+	-rm -f $(TARGET)

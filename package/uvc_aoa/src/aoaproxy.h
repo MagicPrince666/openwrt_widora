@@ -38,7 +38,6 @@ typedef struct t_usbXferThread {
 	pthread_cond_t condition;
 	struct libusb_transfer *xfr;
 	int usbActive;
-//	int dead;
 	int stop;
 	int stopped;
 	int tickle;

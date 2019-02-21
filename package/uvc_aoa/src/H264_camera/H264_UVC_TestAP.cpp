@@ -29,8 +29,6 @@
 #include "v4l2uvc.h"
 #include "h264_xu_ctrls.h"
 #include "H264_UVC_TestAP.h"
-#include "ringbuffer.h"
-extern RingBuffer ring;
 
 struct H264Format *gH264fmt = NULL;
 
@@ -247,10 +245,6 @@ int init_device(int width, int height,int format)
 	parm.parm.capture.timeperframe.denominator = 30; 
 	ioctl(vd->fd, VIDIOC_S_PARM, &parm);
 
-	if (-1 == xioctl (vd->fd, VIDIOC_G_FMT, &fmt))
-		return errnoexit ("VIDIOC_G_FMT");
-	printf("get width = %d ;height = %d\n",fmt.fmt.pix.width,fmt.fmt.pix.height);
-
 	return init_mmap ();
 }
 
@@ -327,7 +321,7 @@ void Init_264camera(void)
 	else
 	{
 		double m_BitRate = 0.0;
-		if(XU_H264_Set_BitRate(vd->fd, 4096*1024) < 0 )//设置码率
+		if(XU_H264_Set_BitRate(vd->fd, 8192*1024) < 0 )//设置码率
 		{
 			printf("XU_H264_Set_BitRate Failed\n");
 		}
@@ -348,8 +342,6 @@ void Init_264camera(void)
 	// 	printf("---create Record.264------success------- !\n");	
 }
 
-extern struct listentry *connectedDevices;
-
 void * cap_video (void *arg)   
 {
 	int ret;
@@ -361,8 +353,6 @@ void * cap_video (void *arg)
     tv.tv_usec = 10000;
 	fd_set rfds;
     int retval=0;
-
-    int free_buf = 0;
 
 	while(capturing)
 	{
@@ -384,25 +374,18 @@ void * cap_video (void *arg)
 			ret = ioctl(vd->fd, VIDIOC_DQBUF, &buf);
 			if (ret < 0) 
 			{
-				printf("Unable to dequeue buffer 1!\n");
+				printf("Unable to dequeue buffer!\n");
 				exit(1);
 			}	  
 			
-			
 			//fwrite(buffers[buf.index].start, buf.bytesused, 1, rec_fp1);
-			if(connectedDevices != NULL)
-    		{
-				free_buf = ring.overage();
-			    if(free_buf < buf.bytesused)
-			    	ring.Reset();
-				ring.write((uint8_t*)(buffers[buf.index].start),buf.bytesused);
-			}
+			//RingBuffer_write(rbuf,(uint8_t*)(buffers[buf.index].start),buf.bytesused);
 
 			ret = ioctl(vd->fd, VIDIOC_QBUF, &buf);
 			
 			if (ret < 0) 
 			{
-				printf("Unable to requeue buffer 2\n");
+				printf("Unable to requeue buffer");
 				exit(1);
 			}
 		}

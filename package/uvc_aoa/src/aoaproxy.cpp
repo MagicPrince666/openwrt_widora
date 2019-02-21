@@ -32,17 +32,16 @@
 #include "a2spipe.h"
 #include "log.h"
 
+#include "v4l2uvc.h"
+#include "h264_xu_ctrls.h"
 #include "H264_UVC_TestAP.h"
-#include "ringbuffer.h"
 
-RingBuffer ring;
 
 //控制主循环
 static int do_exit = 0;
 static libusb_context *ctx;
 //维护当前所有usb与对应socket的链表
 struct listentry *connectedDevices;
-//pthread_t usbInventoryThread;
 int doUpdateUsbInventory = 0;
 
 static int startUSBPipe(struct listentry *device);
@@ -50,6 +49,8 @@ static void stopUSBPipe(struct listentry *device);
 
 static struct t_excludeList *exclude = NULL;
 static int autoscan = 1;
+
+extern struct vdIn *vd;
 
 /*
 static void a2s_usbrx_cb(struct libusb_transfer *transfer) {
@@ -63,9 +64,11 @@ int main(int argc, char** argv) {
 	ctx = NULL;
 	connectedDevices = NULL;
 
-	//Init_264camera();
+	Init_264camera();
 
-	
+	//pthread_t ThreadId0;
+	//pthread_create(&ThreadId0, NULL, cap_video, NULL);
+
 	AoaProxy::initSigHandler();
 
 	if (0 > AoaProxy::initUsb()) {
@@ -82,9 +85,6 @@ int main(int argc, char** argv) {
 		setitimer (ITIMER_REAL, &timer, NULL);
 	}
 
-	pthread_t ThreadId0;
-	pthread_create(&ThreadId0, NULL, cap_video, NULL);
-			
 	libusb_device **devs = NULL;
 	while(!do_exit) {
 
@@ -93,8 +93,7 @@ int main(int argc, char** argv) {
 			AoaProxy::cleanupDeadDevices();
 			//尝试链接设备
 			AoaProxy::updateUsbInventory(devs);
-
-			
+		
 		}
 
 		r = libusb_handle_events(ctx);
@@ -119,6 +118,7 @@ int main(int argc, char** argv) {
 		setitimer (ITIMER_REAL, &timer, NULL);
 	}
 	AoaProxy::shutdownEverything();
+	close_v4l2(vd);
 
 	return EXIT_SUCCESS;
 }
@@ -147,7 +147,6 @@ void AoaProxy::tickleUsbInventoryThread() {
 int AoaProxy::updateUsbInventory(libusb_device **devs) {
 	static ssize_t cnt = 0;
 	static ssize_t lastCnt = 0;
-//	static libusb_device **devs;
 	static libusb_device **lastDevs = NULL;
 	//获取usb设备列表
 	cnt = libusb_get_device_list(ctx, &devs);
@@ -177,8 +176,6 @@ int AoaProxy::updateUsbInventory(libusb_device **devs) {
 	}
 
 	if (lastDevs != NULL) {
-//		if (cnt != lastCnt)
-//			fprintf(LOG_DEB, "number of USB devices changed from %d to %d\n", lastCnt, cnt);
 
 		for (i=0;i<lastCnt;i++) {
 			foundBefore = 0;
@@ -242,11 +239,13 @@ int AoaProxy::connectDevice(libusb_device *device) {
 
 	//检查当前设备是否处于accessory模式
 	if(!Accessory::isDroidInAcc(device)) {
+		if(desc.idVendor != 0x05a3){
 		logDebug("attempting AOA on device 0x%04X:%04X\n",
 				desc.idVendor, desc.idProduct);
 		//写入要启动的应用的信息 开启android的accessory模式	
 		Accessory::switchDroidToAcc(device, 1);
 		return -1;
+		}
 	}
 
 	//entry管理socket与usb
@@ -338,7 +337,6 @@ void AoaProxy::cleanupDeadDevices() {
 
 
 int initUsbXferThread(usbXferThread *t) {
-//	t->dead = 0;
 	t->xfr = libusb_alloc_transfer(0);
 	if (t->xfr == NULL) {
 		return -1;
@@ -359,6 +357,10 @@ void destroyUsbXferThread(usbXferThread *t) {
 }
 
 int startUSBPipe(struct listentry *device) {
+
+//	device->droid.inpacketsize = 1024;
+//	device->droid.outpacketsize = 1024;
+
 	int r;
 	if(initUsbXferThread(&device->usbRxThread) < 0) {
 		logError("failed to allocate usb rx transfer\n");
@@ -462,6 +464,7 @@ int AoaProxy::initUsb() {
 		return r;
 	}
 	libusb_set_debug(ctx, 3);
+	//libusb_set_option(ctx, LIBUSB_OPTION_LOG_LEVEL, 3);
 	return 0;
 }
 
