@@ -1,0 +1,233 @@
+Index: linux-3.18.29/drivers/net/usb/qmi_wwan.c
+===================================================================
+--- linux-3.18.29.orig/drivers/net/usb/qmi_wwan.c
++++ linux-3.18.29/drivers/net/usb/qmi_wwan.c
+@@ -20,6 +20,87 @@
+ #include <linux/usb/usbnet.h>
+ #include <linux/usb/cdc-wdm.h>
+ 
++#if 1 //Added by Quectel
++
++#include <linux/etherdevice.h>
++
++struct sk_buff *qmi_wwan_tx_fixup(struct usbnet *dev, struct sk_buff *skb, gfp_t flags)
++{
++if (dev->udev->descriptor.idVendor !=cpu_to_le16(0x2C7C))
++return skb;
++
++// Skip Ethernet header from message
++if (skb_pull(skb, ETH_HLEN)) {
++return skb;
++} else {
++dev_err(&dev->intf->dev, "Packet Dropped");
++}
++
++// Filter the packet out, release it
++dev_kfree_skb_any(skb);
++
++return NULL;
++}
++
++#include <linux/version.h>
++
++#if (LINUX_VERSION_CODE < KERNEL_VERSION( 3,9,1 ))
++
++static int qmi_wwan_rx_fixup(struct usbnet *dev, structsk_buff *skb)
++{
++__be16 proto;
++
++if (dev->udev->descriptor.idVendor !=cpu_to_le16(0x2C7C))
++return 1;
++
++/* This check is no longer done by usbnet */
++if (skb->len < dev->net->hard_header_len)
++return 0;
++
++switch (skb->data[0] & 0xf0) {
++case 0x40:
++proto = htons(ETH_P_IP);
++break;
++
++case 0x60:
++proto = htons(ETH_P_IPV6);
++break;
++
++case 0x00:
++if (is_multicast_ether_addr(skb->data))
++return 1;
++
++/* possibly bogus destination - rewrite just in case */
++skb_reset_mac_header(skb);
++goto fix_dest;
++
++default:
++/* pass along other packets without modifications */
++return 1;
++}
++
++if (skb_headroom(skb) < ETH_HLEN)
++return 0;
++
++skb_push(skb, ETH_HLEN);
++skb_reset_mac_header(skb);
++eth_hdr(skb)->h_proto = proto;
++memset(eth_hdr(skb)->h_source, 0, ETH_ALEN);
++fix_dest:
++memcpy(eth_hdr(skb)->h_dest, dev->net->dev_addr,ETH_ALEN);
++return 1;
++}
++
++/* very simplistic detection of IPv4or IPv6 headers */
++static bool possibly_iphdr(const char*data)
++{
++return (data[0] & 0xd0) == 0x40;
++}
++
++#endif
++#endif
++
++
+ /* This driver supports wwan (3G/LTE/?) devices using a vendor
+  * specific management protocol called Qualcomm MSM Interface (QMI) -
+  * in addition to the more common AT commands over serial interface
+@@ -344,6 +425,29 @@ next_desc:
+ 		dev->net->dev_addr[0] &= 0xbf;	/* clear "IP" bit */
+ 	}
+ 	dev->net->netdev_ops = &qmi_wwan_netdev_ops;
++
++#if 1 //Added by Quectel
++	if(dev->udev->descriptor.idVendor == cpu_to_le16(0x2C7C)) {
++		dev_info(&intf->dev, "Quectel EC21&EC25&EC20 R2.0work on RawIP mode\n");
++		dev->net->flags |= IFF_NOARP;
++#if (LINUX_VERSION_CODE < KERNEL_VERSION( 3,9,1 ))
++/* make MAC addr easily distinguishable from an IP header */
++	if (possibly_iphdr(dev->net->dev_addr)){
++	dev->net->dev_addr[0] |= 0x02; /* set local assignment bit */
++	dev->net->dev_addr[0] &= 0xbf; /* clear "IP" bit */
++	}
++#endif
++	usb_control_msg(
++		interface_to_usbdev(intf),
++		usb_sndctrlpipe(interface_to_usbdev(intf), 0),
++		0x22,//USB_CDC_REQ_SET_CONTROL_LINE_STATE
++		0x21,//USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_INTERFACE
++		1, //active CDCDTR
++		intf->cur_altsetting->desc.bInterfaceNumber,
++		NULL, 0, 100);
++}
++#endif
++
+ err:
+ 	return status;
+ }
+@@ -429,6 +533,14 @@ static const struct driver_info	qmi_wwan
+ 	.unbind		= qmi_wwan_unbind,
+ 	.manage_power	= qmi_wwan_manage_power,
+ 	.rx_fixup       = qmi_wwan_rx_fixup,
++#if 1 //Added by Quectel
++#if (LINUX_VERSION_CODE < KERNEL_VERSION( 4,5,0 ))
++	.tx_fixup =qmi_wwan_tx_fixup,
++#endif
++#if (LINUX_VERSION_CODE < KERNEL_VERSION( 3,9,1 ))
++	.rx_fixup =qmi_wwan_rx_fixup,
++#endif
++#endif
+ };
+ 
+ #define HUAWEI_VENDOR_ID	0x12D1
+@@ -447,6 +559,31 @@ static const struct driver_info	qmi_wwan
+ 	QMI_FIXED_INTF(vend, prod, 0)
+ 
+ static const struct usb_device_id products[] = {
++
++#if 1 //Added by Quectel
++
++#ifndef QMI_FIXED_INTF
++
++/* map QMI/wwan function by a fixed interface number */
++#define QMI_FIXED_INTF(vend, prod, num) \
++.match_flags = USB_DEVICE_ID_MATCH_DEVICE |
++USB_DEVICE_ID_MATCH_INT_INFO, \
++.idVendor = vend, \
++.idProduct = prod, \
++.bInterfaceClass = 0xff, \
++.bInterfaceSubClass = 0xff, \
++.bInterfaceProtocol = 0xff, \
++.driver_info = (unsigned long)&qmi_wwan_force_int##num,
++
++#endif
++
++{ QMI_FIXED_INTF(0x05C6, 0x9003, 4) }, /* Quectel UC20 */
++{ QMI_FIXED_INTF(0x05C6, 0x9215, 4) }, /* Quectel EC20 */
++{ QMI_FIXED_INTF(0x2C7C, 0x0125, 4) }, /* Quectel EC25/EC20R2.0 */
++{ QMI_FIXED_INTF(0x2C7C, 0x0121, 4) }, /* Quectel EC21 */
++
++#endif
++
+ 	/* 1. CDC ECM like devices match on the control interface */
+ 	{	/* Huawei E392, E398 and possibly others sharing both device id and more... */
+ 		USB_VENDOR_AND_INTERFACE_INFO(HUAWEI_VENDOR_ID, USB_CLASS_VENDOR_SPEC, 1, 9),
+Index: linux-3.18.29/drivers/usb/serial/option.c
+===================================================================
+--- linux-3.18.29.orig/drivers/usb/serial/option.c
++++ linux-3.18.29/drivers/usb/serial/option.c
+@@ -1866,6 +1866,11 @@ static struct usb_serial_driver option_1
+ #ifdef CONFIG_PM
+ 	.suspend           = usb_wwan_suspend,
+ 	.resume            = usb_wwan_resume,
++
++#if 1 //Added by Quectel
++.reset_resume = usb_wwan_resume,
++#endif
++
+ #endif
+ };
+ 
+@@ -1933,6 +1938,22 @@ static int option_probe(struct usb_seria
+ 	    iface_desc->bInterfaceClass != USB_CLASS_CDC_DATA)
+ 		return -ENODEV;
+ 
++#if 1 //Added by Quectel
++//Quectel UC20'sinterface 4 can be used as USB Network device
++if(serial->dev->descriptor.idVendor == cpu_to_le16(0x05C6) &&
++serial->dev->descriptor.idProduct == cpu_to_le16(0x9003) &&
++serial->interface->cur_altsetting->desc.bInterfaceNumber >= 4)
++  return -ENODEV;
++//Quectel EC20's interface4 can be used as USB Network device
++if(serial->dev->descriptor.idVendor == cpu_to_le16(0x05C6) &&
++serial->dev->descriptor.idProduct == cpu_to_le16(0x9215) &&
++serial->interface->cur_altsetting->desc.bInterfaceNumber >= 4)
++return -ENODEV;
++//QuectelEC21&EC25&EC20 R2.0's interface 4 can be used as USB Network device
++if(serial->dev->descriptor.idVendor == cpu_to_le16(0x2C7C)
++&&serial->interface->cur_altsetting->desc.bInterfaceNumber >= 4)
++return -ENODEV;
++#endif
+ 	/* Store device id so we can use it during attach. */
+ 	usb_set_serial_data(serial, (void *)id);
+ 
+Index: linux-3.18.29/drivers/usb/serial/usb_wwan.c
+===================================================================
+--- linux-3.18.29.orig/drivers/usb/serial/usb_wwan.c
++++ linux-3.18.29/drivers/usb/serial/usb_wwan.c
+@@ -471,6 +471,20 @@ static struct urb *usb_wwan_setup_urb(st
+ 			  usb_sndbulkpipe(serial->dev, endpoint) | dir,
+ 			  buf, len, callback, ctx);
+ 
++#if 1 //Added by Quectelfor Zero Packet
++	if (dir == USB_DIR_OUT) {
++		struct usb_device_descriptor*desc = &serial->dev->descriptor;
++		if (desc->idVendor ==cpu_to_le16(0x05C6) && desc->idProduct == cpu_to_le16(0x9090))
++			urb->transfer_flags|= URB_ZERO_PACKET;
++		if (desc->idVendor ==cpu_to_le16(0x05C6) && desc->idProduct == cpu_to_le16(0x9003))
++			urb->transfer_flags|= URB_ZERO_PACKET;
++		if (desc->idVendor ==cpu_to_le16(0x05C6) && desc->idProduct == cpu_to_le16(0x9215))
++			urb->transfer_flags|= URB_ZERO_PACKET;
++		if (desc->idVendor ==cpu_to_le16(0x2C7C))
++			urb->transfer_flags|= URB_ZERO_PACKET;
++		}
++#endif
++
+ 	return urb;
+ }
+ 
