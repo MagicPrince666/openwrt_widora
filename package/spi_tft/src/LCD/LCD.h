@@ -32,8 +32,11 @@ typedef struct
 extern _lcd_dev lcddev;	//管理LCD重要参数
 //IO连接  
 
-#define LCD_DC_1 mt76x8_gpio_set_pin_value(11, 1)
-#define LCD_DC_0 mt76x8_gpio_set_pin_value(11, 0)
+#define LCD_DC_1 write(gpio_fd_dc, "1", 1)
+#define LCD_DC_0 write(gpio_fd_dc, "0", 1)
+
+#define LCD_BL_1 write(gpio_fd_bl, "1", 1)
+#define LCD_BL_0 write(gpio_fd_bl, "0", 1)
 
 //扫描方向定义
 #define L2R_U2D  0 //从左到右,从上到下

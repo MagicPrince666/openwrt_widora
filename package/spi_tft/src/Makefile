@@ -5,9 +5,9 @@
 TARGET	= simple-spitft
 
 DIR		= . ./font ./LCD ./sys ./spi 
-INC		= -I./font -I./LCD -I./sys -I./spi -I./iic
+INC		= -I./font -I./LCD -I./sys -I./spi
 CFLAGS	= -O3 -g -Wall# -std=gnu++11 
-LDFLAGS += -lpthread -lrt -ldl
+LDFLAGS += -lpthread -lrt
 
 OBJPATH	= .
 INSTALLPATH	= ./bin

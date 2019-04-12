@@ -491,13 +491,17 @@ void LCD_delay(int t)
 
 void Lcd_Init(void)
 {
+/*
 	if (gpio_mmap())
 		printf("error\n");
 
 	mt76x8_gpio_set_pin_direction(11, 1);
 	mt76x8_gpio_set_pin_direction(39, 1);
 	mt76x8_gpio_set_pin_value(39, 1);
-
+*/
+	gpio_init();
+	LCD_BL_1;
+	LCD_DC_1;
 	SPI_Open();//硬件SPI初始化
 	
 	

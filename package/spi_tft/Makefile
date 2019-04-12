@@ -11,7 +11,7 @@ define Package/spi_tft
 	CATEGORY:=Utilities
 	TITLE:=spi_tft firmware
 	SUBMENU:=XAG
-	DEPENDS:= +libpthread +libstdcpp +librt +libdl
+	DEPENDS:= +libpthread +libstdcpp +librt
 endef
 
 define Package/spi_tft/description

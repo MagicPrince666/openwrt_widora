@@ -130,7 +130,11 @@ void * thread_tft (void *arg)
 	{							
 		sleep(1);
     }
-	close(gpio_mmap_fd);
+	//close(gpio_mmap_fd);
+	if(gpio_fd_dc)
+		close(gpio_fd_dc);
+	if(gpio_fd_bl)
+		close(gpio_fd_bl);
 	SPI_Close();
 	pthread_exit(NULL);
 }
