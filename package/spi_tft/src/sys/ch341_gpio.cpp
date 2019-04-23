@@ -2,6 +2,7 @@
 
 int gpio_fd_dc = -1;
 int gpio_fd_bl = -1;
+int gpio_fd_tirq = -1;
 
 int gpio_init(void)
 {
@@ -20,6 +21,10 @@ int gpio_init(void)
 	FILE* set_export;
 
     //打开设备节点
+    set_export = fopen ("/sys/class/gpio/export", "w");
+	if(set_export == NULL)printf ("Can't open /sys/class/gpio/export!\n");
+	else fprintf(set_export,"11");
+	fclose(set_export);
 	set_export = fopen ("/sys/class/gpio/export", "w");
 	if(set_export == NULL)printf ("Can't open /sys/class/gpio/export!\n");
 	else fprintf(set_export,"41");
@@ -29,17 +34,22 @@ int gpio_init(void)
 	else fprintf(set_export,"42");
 	fclose(set_export);
 	//设置成输出
+	set_export = fopen ("/sys/class/gpio/gpio11/direction", "w");
+	if(set_export == NULL)printf ("Can't open /sys/class/gpio/gpio11/direction!\n");
+	else fprintf(set_export,"out");
+	fclose(set_export);//设置
 	set_export = fopen ("/sys/class/gpio/gpio41/direction", "w");
 	if(set_export == NULL)printf ("Can't open /sys/class/gpio/gpio41/direction!\n");
 	else fprintf(set_export,"out");
 	fclose(set_export);//设置
     set_export = fopen ("/sys/class/gpio/gpio42/direction", "w");
 	if(set_export == NULL)printf ("Can't open /sys/class/gpio/gpio42/direction!\n");
-	else fprintf(set_export,"out");
+	else fprintf(set_export,"in");
 	fclose(set_export);//设置
 
-	gpio_fd_dc = open ("/sys/class/gpio/gpio41/value", O_RDWR);
-    gpio_fd_bl = open ("/sys/class/gpio/gpio42/value", O_RDWR);
+	gpio_fd_dc = open ("/sys/class/gpio/gpio11/value", O_RDWR);
+    gpio_fd_bl = open ("/sys/class/gpio/gpio41/value", O_RDWR);
+    gpio_fd_tirq = open ("/sys/class/gpio/gpio42/value", O_RDWR);
 
 	write(gpio_fd_dc,"1",1);
 	write(gpio_fd_bl,"1",1);

@@ -26,7 +26,7 @@ define KernelPackage/$(PKG_NAME)
   #FILES:= $(LINUX_DIR)/drivers/net/usb/simcom_wwan.ko
   AUTOLOAD:=$(call AutoProbe,simcom_wwan)
   #AUTOLOAD:=$(call AutoProbe,90,simcom_wwan,1)
-  DEPENDS:=+kmod-usb-net +kmod-usb-wdm
+  DEPENDS:=+kmod-usb-net +kmod-usb-wdm +kmod-usb-serial +kmod-usb-serial-option +kmod-usb-serial-wwan +wwan
   #$(call AddDepends/usb-net,+kmod-usb-wdm)
 endef
 
