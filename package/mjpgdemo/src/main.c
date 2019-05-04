@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -14,10 +13,12 @@
 #include <fcntl.h>
 #include <time.h>
 #include <sys/time.h>
+#include <time.h>
 #include <signal.h>
 //#include <X11/Xlib.h>
 #include "v4l2uvc.h"
 #include "avilib.h"
+
 
 int main(int argc, char *argv[])   // -s 1280x720   -d  /dev/video1   -a  test.avi  -i 30
 {
@@ -34,19 +35,25 @@ int main(int argc, char *argv[])   // -s 1280x720   -d  /dev/video1   -a  test.a
 	int height;
 	int fps;
 	int i;
+	char str[260] = {0};
 		
 	for (i = 0; i < argc; i++) 
 	{		
-		printf("No ffff %d\n" ,argc);
+		printf("No found argument %d\n" ,argc);
 		if (1 == argc)
 		{
 			printf("No for for \n");
 			
-		    width = 640 ; 
-	        height = 480 ;
-	        fps   = 30 ;
+		    width = 1280 ; 
+	        height = 720 ;
+	        fps   = 15 ;
 	        filename = "/dev/video0";
-	        avifilename = "test.avi";
+
+	        time_t timer;
+            timer = time(NULL);
+            //char str[260] = {0};
+            sprintf(str,"%ld.avi",timer);
+            avifilename = str;
 		}
 		
 		if (argv[i] == NULL || *argv[i] == 0 || *argv[i] != '-') 
