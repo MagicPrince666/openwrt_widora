@@ -1,7 +1,7 @@
 #CXX = mips-openwrt-linux-musl-g++
 #CC = mips-openwrt-linux-musl-gcc
 
-TARGET	= mipgrecord
+TARGET	= mjpgrecord
 
 DIR		= .
 INC		= -I.

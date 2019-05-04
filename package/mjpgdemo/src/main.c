@@ -200,7 +200,7 @@ int main(int argc, char *argv[])   // -s 1280x720   -d  /dev/video1   -a  test.a
 			printf("Unable to requeue buffer");
 			exit(1);
 		}
-		sleep(60);//一天
+		//sleep(60);//一天
 	}
 	fclose(file);
 	close_v4l2(vd);

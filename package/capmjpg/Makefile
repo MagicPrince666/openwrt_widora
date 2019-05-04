@@ -1,6 +1,6 @@
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=mjpg
+PKG_NAME:=capmjpg
 PKG_VERSION:=XAG-huangliquan-1.0
 PKG_BUILD_DIR:= $(BUILD_DIR)/$(PKG_NAME)
 
@@ -25,7 +25,7 @@ endef
 
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/mjpgrecord $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/capmjpg $(1)/usr/bin/
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))

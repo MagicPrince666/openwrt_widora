@@ -9,12 +9,12 @@ include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=spi-ch341-usb
-PKG_RELEASE:=XAG-USB-SPI-1
+PKG_RELEASE:=PRINCE-USB-SPI-1
 
 include $(INCLUDE_DIR)/package.mk
 
 define KernelPackage/$(PKG_NAME)
-  SUBMENU:=XAG_KERNELMODULES
+  SUBMENU:=prince
   TITLE:=usb to spi for ch341
   DEPENDS:=+kmod-usb-core
   FILES:=$(PKG_BUILD_DIR)/spi-ch341-usb.ko
