@@ -4,6 +4,7 @@
 uint16_t Handkey;
 uint8_t Comd[2]={0x01,0x42};	
 uint8_t Data[9]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}; //
+
 uint16_t MASK[]={
     PSB_SELECT,
     PSB_L3,
@@ -29,10 +30,14 @@ void PS2_Init(void)
 	if (gpio_mmap())
 		printf("error\n");
 
-	mt76x8_gpio_set_pin_direction(39, 0);
-	mt76x8_gpio_set_pin_direction(40, 1);
-	mt76x8_gpio_set_pin_direction(41, 1);
-	mt76x8_gpio_set_pin_direction(42, 1);								  
+	mt76x8_gpio_set_pin_direction(14, 0);
+	mt76x8_gpio_set_pin_direction(15, 1);
+	mt76x8_gpio_set_pin_direction(16, 1);
+	mt76x8_gpio_set_pin_direction(17, 1);
+	mt76x8_gpio_set_pin_value(14, 1);
+	PS2_JOYPAD_CMND_1;
+	PS2_JOYPAD_ATT_1;	
+	PS2_JOYPAD_CLOCK_1;							  
 }
 
 //

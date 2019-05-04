@@ -4,15 +4,14 @@
 #include <inttypes.h>
 #include "sys.h"
 
-//#define PS2_JOYPAD_ACK        gpio_get_value(F1C100S_GPIOA0)
-#define PS2_JOYPAD_DATA       mt76x8_gpio_get_pin(39)
-#define PS2_JOYPAD_CMND_1     mt76x8_gpio_set_pin_value(41, 1)      //E9 CLK
-#define PS2_JOYPAD_ATT_1      mt76x8_gpio_set_pin_value(42, 1)      //E8 MOSI
-#define PS2_JOYPAD_CLOCK_1    mt76x8_gpio_set_pin_value(40, 1)      //E7 CS
+#define PS2_JOYPAD_DATA       mt76x8_gpio_get_pin(14)
+#define PS2_JOYPAD_CMND_1     mt76x8_gpio_set_pin_value(15, 1)      //E9 CLK
+#define PS2_JOYPAD_ATT_1      mt76x8_gpio_set_pin_value(16, 1)      //E8 MOSI
+#define PS2_JOYPAD_CLOCK_1    mt76x8_gpio_set_pin_value(17, 1)      //E7 CS
 
-#define PS2_JOYPAD_CMND_0     mt76x8_gpio_set_pin_value(41, 0)      //E9
-#define PS2_JOYPAD_ATT_0      mt76x8_gpio_set_pin_value(42, 0)      //E8
-#define PS2_JOYPAD_CLOCK_0    mt76x8_gpio_set_pin_value(40, 0)      //E7
+#define PS2_JOYPAD_CMND_0     mt76x8_gpio_set_pin_value(15, 0)      //E9
+#define PS2_JOYPAD_ATT_0      mt76x8_gpio_set_pin_value(16, 0)      //E8
+#define PS2_JOYPAD_CLOCK_0    mt76x8_gpio_set_pin_value(17, 0)      //E7
 
 #define delay_us usleep
 

@@ -16,6 +16,7 @@ int main(int argc, char **argv){
 		if(key != 0)               
 		{
 			printf("key = %d\r\n",key);
+			
 			if(key == 12)
 			{
 				PS2_Vibration(0xFF,0x00);
@@ -36,6 +37,7 @@ int main(int argc, char **argv){
 				//case 6:pwm_config(pwm1, 2000000, 20000000, 1);break;
 				//case 8:pwm_config(pwm1, 1000000, 20000000, 1);break;
 			}
+
 		}
 		
 		lx = PS2_AnologData(PSS_LX);
@@ -85,7 +87,7 @@ int main(int argc, char **argv){
 			printf("RY = %d\r\n",ry);
 		}
 
-		sleep(100000);	
+		usleep(1000);	
 	}
 
 	return 0;
