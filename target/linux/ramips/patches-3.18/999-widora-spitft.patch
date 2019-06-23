@@ -1,0 +1,21 @@
+Index: linux-3.18.29/drivers/video/Kconfig
+===================================================================
+--- linux-3.18.29.orig/drivers/video/Kconfig
++++ linux-3.18.29/drivers/video/Kconfig
+@@ -28,6 +28,7 @@ endmenu
+ 
+ menu "Frame buffer Devices"
+ source "drivers/video/fbdev/Kconfig"
++source "drivers/video/fbtft/Kconfig"
+ endmenu
+ 
+ source "drivers/video/backlight/Kconfig"
+Index: linux-3.18.29/drivers/video/Makefile
+===================================================================
+--- linux-3.18.29.orig/drivers/video/Makefile
++++ linux-3.18.29/drivers/video/Makefile
+@@ -11,3 +11,4 @@ obj-$(CONFIG_VIDEOMODE_HELPERS) += displ
+ ifeq ($(CONFIG_OF),y)
+ obj-$(CONFIG_VIDEOMODE_HELPERS) += of_display_timing.o of_videomode.o
+ endif
++obj-y += fbtft/

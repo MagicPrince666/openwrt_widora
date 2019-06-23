@@ -101,24 +101,20 @@
 					reg = <0x50000 0x1fb0000>;
 				};
 			};
-/*
-			spidev@1 {
-				#address-cells = <1>;
-				#size-cells = <1>;
-				compatible = "spidev";
-				reg = <1 0>;
-				spi-max-frequency = <40000000>;
-			};
-*/
-			spidev@1 {
-                #address-cells = <1>;
-                #size-cells = <1>;
-                compatible = "spidev";
-                reg= <1 0>;
-				spi-max-frequency = <60000000>;
-				spi-cpol = <0>;
-				spi-cpha = <0>;
-			};
+			ili9341@1 {
+                   #address-cells = <1>;
+                   #size-cells = <1>;
+                   status = "okay";
+                   compatible = "ilitek,ili9341";
+                   reg = <1 0>;
+                   spi-max-frequency = <32000000>;
+                   txbuflen = <16>;
+                   rotate = <0>;
+                   bgr;
+                   fps = <15>;
+                   buswidth = <8>;
+                   dc-gpios = <&gpio0 11 1>;
+           	};
             spidev@2 {  
                 #address-cells = <1>;
                 #size-cells = <1>;
