@@ -714,9 +714,9 @@ define KernelPackage/fbtft
   SUBMENU:=$(VIDEO_MENU)
   TITLE:=Framebuffer support
   DEPENDS:=@DISPLAY_SUPPORT
-  KCONFIG:=CONFIG_FB
+  KCONFIG:=CONFIG_FB_TFT
   FILES:=$(LINUX_DIR)/drivers/video/fbtft/fbtft.ko
-  AUTOLOAD:=$(call AutoLoad,fbtft)
+  AUTOLOAD:=$(call AutoProbe,fbtft)
 endef
 
 define KernelPackage/fbtft/description
