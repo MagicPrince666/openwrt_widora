@@ -11,7 +11,7 @@ define Profile/WIDORA3264
 		kmod-usb-core kmod-usb2 kmod-usb-ohci \
 		kmod-ledtrig-netdev \
   		mountd \
-        	mjpg-streamer \
+        mjpg-streamer \
 		uhttpd rpcd rpcd-mod-iwinfo \
 		rpcd-mod-rpcsys cgi-io spi-tools \
 		kmod-fs-vfat kmod-fs-exfat kmod-fs-ext4 block-mount e2fsprogs \
@@ -21,7 +21,7 @@ define Profile/WIDORA3264
 		kmod-video-core kmod-video-uvc \
 		kmod-sound-core kmod-sound-mtk madplay-alsa alsa-utils \
 		mtk-wifi airkiss webui ated luci\
-        	maccalc shairport_mmap reg ser2net
+        maccalc shairport_mmap reg ser2net
 endef
 
 define Profile/WIDORA3264/Description

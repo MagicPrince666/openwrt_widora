@@ -82,7 +82,8 @@ define KernelPackage/sound-mtk
 	CONFIG_SND_MT76XX_SOC \
 	CONFIG_SND_MT76XX_I2S \
 	CONFIG_SND_MT76XX_PCM \
-	CONFIG_SND_SOC_WM8960
+	CONFIG_SND_SOC_WM8960 \
+  CONFIG_SND_MT76XX_SOC_MT7628
   FILES:= \
 	$(LINUX_DIR)/sound/soc/mtk/ralink_gdma.ko \
 	$(LINUX_DIR)/sound/soc/mtk/snd-soc-mt76xx-i2s-ctl.ko \
@@ -100,3 +101,21 @@ define KernelPackage/sound-mtk/description
 endef
 
 $(eval $(call KernelPackage,sound-mtk))
+
+define KernelPackage/fbtft
+  SUBMENU:=Video Support
+  TITLE:=Framebuffer support
+  DEPENDS:=@TARGET_ramips @(TARGET_ramips_mt7628||TARGET_ramips_mt7688||TARGET_ramips_mt7620) @DISPLAY_SUPPORT
+  KCONFIG:=CONFIG_FB_TFT \
+  CONFIG_FB_TFT_ILI9341
+  FILES:=$(LINUX_DIR)/drivers/video/fbtft/fbtft.ko
+  AUTOLOAD:=$(call AutoProbe,fbtft)
+endef
+
+define KernelPackage/fbtft/description
+ Kernel support for spitft framebuffers
+endef
+
+$(eval $(call KernelPackage,fbtft))
+
+

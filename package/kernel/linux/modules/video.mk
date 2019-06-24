@@ -710,18 +710,3 @@ endef
 $(eval $(call KernelPackage,video-gspca-konica))
 
 
-define KernelPackage/fbtft
-  SUBMENU:=$(VIDEO_MENU)
-  TITLE:=Framebuffer support
-  DEPENDS:=@DISPLAY_SUPPORT
-  KCONFIG:=CONFIG_FB_TFT
-  FILES:=$(LINUX_DIR)/drivers/video/fbtft/fbtft.ko
-  AUTOLOAD:=$(call AutoProbe,fbtft)
-endef
-
-define KernelPackage/fbtft/description
- Kernel support for spitft framebuffers
-endef
-
-$(eval $(call KernelPackage,fbtft))
-
