@@ -1,0 +1,28 @@
+Index: gcc-linaro-4.8-2014.04/gcc/cp/cfns.gperf
+===================================================================
+--- gcc-linaro-4.8-2014.04.orig/gcc/cp/cfns.gperf
++++ gcc-linaro-4.8-2014.04/gcc/cp/cfns.gperf
+@@ -21,6 +21,9 @@ __inline
+ #endif
+ static unsigned int hash (const char *, unsigned int);
+ #ifdef __GNUC__
++#ifdef __GNUC_STDC_INLINE__
++__attribute__ ((__gnu_inline__))
++#endif
+ __inline
+ #endif
+ const char * libc_name_p (const char *, unsigned int);
+Index: gcc-linaro-4.8-2014.04/gcc/cp/cfns.h
+===================================================================
+--- gcc-linaro-4.8-2014.04.orig/gcc/cp/cfns.h
++++ gcc-linaro-4.8-2014.04/gcc/cp/cfns.h
+@@ -52,6 +52,9 @@ __inline
+ #endif
+ static unsigned int hash (const char *, unsigned int);
+ #ifdef __GNUC__
++#ifdef __GNUC_STDC_INLINE__
++__attribute__ ((__gnu_inline__))
++#endif
+ __inline
+ #endif
+ const char * libc_name_p (const char *, unsigned int);
