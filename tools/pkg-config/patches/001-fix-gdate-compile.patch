@@ -2,21 +2,19 @@ Index: pkg-config-0.29/glib/glib/gdate.c
 ===================================================================
 --- pkg-config-0.29.orig/glib/glib/gdate.c
 +++ pkg-config-0.29/glib/glib/gdate.c
-@@ -2439,6 +2439,10 @@ win32_strftime_helper (const GDate     *
+@@ -2439,6 +2439,9 @@ win32_strftime_helper (const GDate     *
   *
   * Returns: number of characters written to the buffer, or 0 the buffer was too small
   */
-+
 +#pragma GCC diagnostic push
 +#pragma GCC diagnostic ignored "-Wformat-nonliteral"
 +
  gsize     
  g_date_strftime (gchar       *s, 
                   gsize        slen, 
-@@ -2549,3 +2553,6 @@ g_date_strftime (gchar       *s,
+@@ -2549,3 +2552,5 @@ g_date_strftime (gchar       *s,
    return retval;
  #endif
  }
 +
 +#pragma GCC diagnostic pop
-+
