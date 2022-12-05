@@ -1,23 +1,29 @@
-#
-# Copyright (C) 2006-2016 OpenWrt.org
+# 
+# Copyright (C) 2006-2015 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
 #
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=pkgconf
-PKG_VERSION:=1.9.3
+PKG_NAME:=pkg-config
+PKG_VERSION:=0.29
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
-PKG_SOURCE_URL:=https://distfiles.dereferenced.org/pkgconf
-PKG_HASH:=5fb355b487d54fb6d341e4f18d4e2f7e813a6622cf03a9e87affa6a40565699d
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=http://pkgconfig.freedesktop.org/releases/
+PKG_MD5SUM:=77f27dce7ef88d0634d0d6f90e03a77f
+
+HOST_BUILD_PARALLEL:=1
 
 include $(INCLUDE_DIR)/host-build.mk
 
 unexport PKG_CONFIG
 
-HOSTCC := $(HOSTCC_NOCACHE)
+HOST_CONFIGURE_ARGS += --with-internal-glib
+
+ifeq ($(HOST_OS),Darwin)
+HOST_LDFLAGS += -framework CoreFoundation -framework Carbon
+endif
 
 define Host/Install
 	$(MAKE) -C $(HOST_BUILD_DIR) install
@@ -26,7 +32,7 @@ define Host/Install
 endef
 
 define Host/Clean
-	rm -f $(STAGING_DIR_HOST)/bin/pkg-config.real $(STAGING_DIR_HOST)/bin/pkg-config
+	-$(MAKE) -C $(HOST_BUILD_DIR) uninstall
 	$(call Host/Clean/Default)
 endef
 
