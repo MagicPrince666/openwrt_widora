@@ -1,0 +1,12 @@
+Index: make-ext4fs-2015-05-01/contents.c
+===================================================================
+--- make-ext4fs-2015-05-01.orig/contents.c
++++ make-ext4fs-2015-05-01/contents.c
+@@ -15,6 +15,7 @@
+  */
+ 
+ #include <sys/stat.h>
++#include <sys/sysmacros.h>
+ #include <string.h>
+ #include <stdio.h>
+ 
