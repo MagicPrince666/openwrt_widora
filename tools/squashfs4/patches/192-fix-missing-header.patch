@@ -1,0 +1,24 @@
+Index: squashfs4.2/squashfs-tools/mksquashfs.c
+===================================================================
+--- squashfs4.2.orig/squashfs-tools/mksquashfs.c
++++ squashfs4.2/squashfs-tools/mksquashfs.c
+@@ -52,6 +52,7 @@
+ #include <regex.h>
+ #include <fnmatch.h>
+ #include <sys/wait.h>
++#include <sys/sysmacros.h>
+ 
+ #ifndef linux
+ #ifndef __CYGWIN__
+Index: squashfs4.2/squashfs-tools/unsquashfs.c
+===================================================================
+--- squashfs4.2.orig/squashfs-tools/unsquashfs.c
++++ squashfs4.2/squashfs-tools/unsquashfs.c
+@@ -30,6 +30,7 @@
+ #include "xattr.h"
+ 
+ #include <sys/types.h>
++#include <sys/sysmacros.h>
+ 
+ struct cache *fragment_cache, *data_cache;
+ struct queue *to_reader, *to_deflate, *to_writer, *from_writer;
