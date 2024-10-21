@@ -65,11 +65,14 @@ $(eval $(call TestHostCommand,zlib, \
 	echo 'int main(int argc, char **argv) { gzdopen(0, "rb"); return 0; }' | \
 		gcc -include zlib.h -x c -o $(TMP_DIR)/a.out - -lz))
 
-$(eval $(call TestHostCommand,libssl, \
+SYSTEM_TYPE := $(shell uname)
+ifneq ($(SYSTEM_TYPE),Darwin)
+    $(eval $(call TestHostCommand,libssl, \
 	Please install the openssl library (with development headers), \
 	echo 'int main(int argc, char **argv) { SSL_library_init(); return 0; }' | \
 		gcc $(HOST_CFLAGS) -include openssl/ssl.h -x c -o $(TMP_DIR)/a.out - -lcrypto -lssl $(HOST_LDFLAGS)))
 
+endif
 
 $(eval $(call SetupHostCommand,tar,Please install GNU 'tar', \
 	gtar --version 2>&1 | grep GNU, \
@@ -136,10 +139,32 @@ $(eval $(call SetupHostCommand,wget,Please install GNU 'wget', \
 $(eval $(call SetupHostCommand,perl,Please install Perl 5.x, \
 	perl --version | grep "perl.*v5"))
 
-$(eval $(call SetupHostCommand,python,Please install Python 2.x, \
-	python2.7 -V 2>&1 | grep Python, \
-	python2 -V 2>&1 | grep Python, \
-	python -V 2>&1 | grep Python))
+$(eval $(call SetupHostCommand,python,Please install Python >= 3.7, \
+	python3.12 -V 2>&1 | grep 'Python 3', \
+	python3.11 -V 2>&1 | grep 'Python 3', \
+	python3.10 -V 2>&1 | grep 'Python 3', \
+	python3.9 -V 2>&1 | grep 'Python 3', \
+	python3.8 -V 2>&1 | grep 'Python 3', \
+	python3.7 -V 2>&1 | grep 'Python 3', \
+	python3 -V 2>&1 | grep -E 'Python 3\.([7-9]|[0-9][0-9])\.?'))
+
+$(eval $(call SetupHostCommand,python3,Please install Python >= 3.7, \
+	python3.12 -V 2>&1 | grep 'Python 3', \
+	python3.11 -V 2>&1 | grep 'Python 3', \
+	python3.10 -V 2>&1 | grep 'Python 3', \
+	python3.9 -V 2>&1 | grep 'Python 3', \
+	python3.8 -V 2>&1 | grep 'Python 3', \
+	python3.7 -V 2>&1 | grep 'Python 3', \
+	python3 -V 2>&1 | grep -E 'Python 3\.([7-9]|[0-9][0-9])\.?'))
+
+$(eval $(call TestHostCommand,python3-distutils, \
+	Please install the Python3 distutils module, \
+	printf 'from sys import version_info\nif version_info < (3, 12):\n\tfrom distutils import util' | \
+		$(STAGING_DIR_HOST)/bin/python3 -))
+
+$(eval $(call TestHostCommand,python3-stdlib, \
+	Please install the Python3 stdlib module, \
+	$(STAGING_DIR_HOST)/bin/python3 -c 'import ntpath'))
 
 $(eval $(call SetupHostCommand,svn,Please install the Subversion client, \
 	svn --version | grep Subversion))
