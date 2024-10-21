@@ -2,11 +2,13 @@ Index: make-ext4fs-2015-05-01/contents.c
 ===================================================================
 --- make-ext4fs-2015-05-01.orig/contents.c
 +++ make-ext4fs-2015-05-01/contents.c
-@@ -15,6 +15,7 @@
+@@ -15,6 +15,9 @@
   */
  
  #include <sys/stat.h>
++#ifndef __APPLE__
 +#include <sys/sysmacros.h>
++#endif
  #include <string.h>
  #include <stdio.h>
  
