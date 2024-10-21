@@ -1,0 +1,12 @@
+Index: e2fsprogs-1.42.8/misc/tune2fs.c
+===================================================================
+--- e2fsprogs-1.42.8.orig/misc/tune2fs.c
++++ e2fsprogs-1.42.8/misc/tune2fs.c
+@@ -42,6 +42,7 @@ extern int optind;
+ #include <stdlib.h>
+ #endif
+ #include <string.h>
++#include <strings.h>
+ #include <time.h>
+ #include <unistd.h>
+ #include <sys/types.h>
