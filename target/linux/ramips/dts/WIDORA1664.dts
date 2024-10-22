@@ -141,6 +141,10 @@
 		mediatek,cd-low;
 	};
 
+	pcie@10140000 {
+		status = "okay";
+	};
+
 	gpio-keys-polled {
 		compatible = "gpio-keys-polled";
 		#address-cells = <1>;
@@ -151,18 +155,5 @@
 			gpios = <&gpio1 6 1>;
 			linux,code = <0x211>;
 		};
-	};
-};
-
-&pcie {
-	pinctrl-names = "default";
-	pinctrl-0 = <&pcie_pins>;
-	status = "okay";
-};
-
-&pcie0 {
-	nvme@0,0 {
-		reg = <0x0000 0 0 0 0>;
-		compatible = "nvme-subsystem";
 	};
 };
